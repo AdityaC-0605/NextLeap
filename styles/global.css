@@ -1,0 +1,30 @@
+:root {
+  --bg: #fffffe;
+  --text: #1f242e;
+  --accent: #eb282b;
+}
+[data-theme='dark'] {
+  --bg: #000000;
+  --text: #feffff;
+  --accent: #ec2513;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.2s, color 0.2s;
+}
+
+.button, .accent {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5em 1.5em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.button:hover {
+  opacity: 0.9;
+} 

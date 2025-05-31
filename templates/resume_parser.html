@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Skill Gap Analyzer</h1>
+
+<!-- Step 1: Upload Resume -->
+{% if step == 'upload' %}
+<form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="step" value="skills">
+    <label>Upload Resume (PDF or DOCX):</label><br>
+    <input type="file" name="resume" required><br><br>
+    <button type="submit">Upload & Analyze</button>
+</form>
+{% endif %}
+
+<!-- Step 2: Show Extracted Skills -->
+{% if step == 'skills' %}
+<h2>Extracted Skills</h2>
+<div>
+    {% for category, skills in extracted_skills.items() %}
+        <strong>{{ category }}:</strong> {{ skills|join(', ') }}<br>
+    {% endfor %}
+</div>
+<form method="post">
+    <input type="hidden" name="step" value="role">
+    <input type="hidden" name="extracted_skills" value="{{ extracted_skills }}">
+    <button type="submit">Next: Select Job Role</button>
+</form>
+{% endif %}
+
+<!-- Step 3: Select Role and Show Match -->
+{% if step == 'role' %}
+<h2>Select Target Role</h2>
+<form method="post">
+    <input type="hidden" name="step" value="match">
+    <input type="hidden" name="extracted_skills" value="{{ extracted_skills }}">
+    <label>Target Role:</label>
+    <select name="selected_role" required>
+        <option value="">Select a role...</option>
+        <option value="Software Developer">Software Developer</option>
+        <option value="Data Scientist">Data Scientist</option>
+        <option value="DevOps Engineer">DevOps Engineer</option>
+        <option value="Full Stack Developer">Full Stack Developer</option>
+        <!-- Add more roles as needed -->
+    </select>
+    <button type="submit">Analyze Role Match</button>
+</form>
+{% endif %}
+
+<!-- Step 4: Show Matched/Missing Skills -->
+{% if step == 'match' %}
+<h2>Skill Match Analysis</h2>
+<div>
+    <strong>Matched Skills:</strong>
+    <ul>
+        {% for skill in matched_skills %}
+            <li>{{ skill }}</li>
+        {% endfor %}
+    </ul>
+    <strong>Missing Skills:</strong>
+    <ul>
+        {% for skill in missing_skills %}
+            <li>{{ skill }}</li>
+        {% endfor %}
+    </ul>
+</div>
+<form method="post">
+    <input type="hidden" name="step" value="advice">
+    <input type="hidden" name="selected_role" value="{{ selected_role }}">
+    <input type="hidden" name="matched_skills" value="{{ matched_skills }}">
+    <input type="hidden" name="missing_skills" value="{{ missing_skills }}">
+    <input type="hidden" name="extracted_skills" value="{{ extracted_skills }}">
+    <button type="submit">Get AI Advice</button>
+</form>
+{% endif %}
+
+<!-- Step 5: Show AI Advice -->
+{% if step == 'advice' %}
+<h2>AI Recommendations for Missing Skills</h2>
+<div>
+    {% for skill, advice in ai_advice.items() %}
+        <strong>{{ skill }}:</strong>
+        <p>{{ advice }}</p>
+    {% endfor %}
+</div>
+<form method="post">
+    <input type="hidden" name="step" value="upload">
+    <button type="submit">Start Over</button>
+</form>
+{% endif %}
+
+{% endblock %}
