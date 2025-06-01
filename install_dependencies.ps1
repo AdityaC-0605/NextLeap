@@ -3,10 +3,10 @@ python -m venv venv
 .\venv\Scripts\Activate.ps1
 
 # Install Python dependencies
-pip install -r requirements.txt
+pip install fastapi uvicorn pandas numpy scikit-learn gym python-dotenv spacy[transformers] PyPDF2 docx2txt
 
-# Download spaCy model
-python -m spacy download en_core_web_sm
+# Download spaCy model (large, for best results)
+python -m spacy download en_core_web_lg
 
 # Install Node.js dependencies
 npm install
@@ -24,8 +24,10 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 }
 
 Write-Host "`nInstallation complete!`n"
-Write-Host "To start the backend server:"
+Write-Host "To start the backend server (unified FastAPI with Gemini integration):"
 Write-Host "1. Activate the virtual environment: .\venv\Scripts\Activate.ps1"
 Write-Host "2. Run: uvicorn main:app --reload"
 Write-Host "`nTo start the frontend development server:"
-Write-Host "Run: npm run dev" 
+Write-Host "Run: npm run dev"
+
+Write-Host "\nSkill gap analysis and Gemini AI advice are now available via the unified FastAPI backend at http://localhost:8000/api/analyze-skills.\n"

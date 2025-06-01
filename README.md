@@ -56,10 +56,25 @@ NextLeap is an AI-powered career recommendation platform designed to help users 
 - `POST /api/career-recommendations` — Get career path suggestions
 - `POST /api/fresher-recommendations` — Get recommendations for freshers
 - `POST /api/cultural-match` — Get company culture matches
+- `POST /api/analyze-skills` — Unified skill gap analysis and Gemini AI advice (see below)
 
 ## Environment Variables
 - `.env`, `.env.local` — Store API keys and configuration secrets here
 
+## Skill Gap Analysis & Gemini AI
+- The `/api/analyze-skills` endpoint now handles resume upload, skill extraction, gap analysis, and Gemini AI-powered advice in a single FastAPI service.
+- To analyze a resume, POST a `multipart/form-data` request with a `resume` file (PDF/DOCX). Optionally, include `target_role` (string) and `gemini_advice` (boolean or 'true') fields to get skill match and Gemini-powered explanations for missing skills.
+- Example request (using curl):
+  ```bash
+  curl -X POST http://localhost:8000/api/analyze-skills \
+    -F "resume=@your_resume.pdf" \
+    -F "target_role=Data Scientist" \
+    -F "gemini_advice=true"
+  ```
+- The response will include `categorized_skills`, and if a target role is provided, `skill_match` and (if requested) `gemini_advice` for missing skills.
+- The frontend is updated to use this unified endpoint for all skill gap and Gemini AI features.
+
 ## Notes
 - Make sure `career_dataset.csv` is present in the root directory for recommendations to work.
 - For resume parsing and advanced skill gap analysis, ensure all Python dependencies are installed.
+- The Flask microservice is no longer required; all backend logic is now unified in FastAPI on port 8000.
