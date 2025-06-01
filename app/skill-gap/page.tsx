@@ -87,6 +87,20 @@ export default function SkillGapPage() {
       setFile(e.target.files[0]);
     }
   };
+  // Utility function to convert plain text to HTML
+  
+const convertToHTML = (text: string) => {
+  // Split the text into paragraphs
+  const paragraphs = text?.split('\n\n');
+
+  // Convert paragraphs to HTML
+  const htmlParagraphs = paragraphs && paragraphs.length && paragraphs
+    .map((para) => `<p class="mb-4">${para.replace(/\n/g, '<br>')}</p>`)
+    .join('');
+
+  return htmlParagraphs;
+};
+
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,8 +287,16 @@ export default function SkillGapPage() {
                       {Object.entries(aiAdvice).map(([skill, advice]) => (
                         <div key={skill} className="bg-[#23283a] border-l-4 border-purple-500 rounded p-4">
                           <strong className="text-purple-300">{skill}:</strong>
-                          <p className="text-purple-100 mt-1">{advice as string}</p>
-                        </div>
+                          <div
+              className="prose prose-base max-w-none text-white"
+              style={{
+                lineHeight: "1.6",
+              }}
+              dangerouslySetInnerHTML={{
+                __html: String(convertToHTML(advice as string)),
+              }}
+            />
+          </div>                        
                       ))}
                     </div>
                   </div>
