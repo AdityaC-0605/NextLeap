@@ -102,7 +102,7 @@ export default function SkillGapPage() {
     formData.append('resume', file);
 
     try {
-      const res = await fetch('http://localhost:5001/api/analyze-skills', {
+      const res = await fetch('http://localhost:8000/api/analyze-skills', {
         method: 'POST',
         body: formData,
       });
@@ -126,14 +126,17 @@ export default function SkillGapPage() {
     setFinished(false);
     if (!role) return;
     try {
-      const res = await fetch('http://localhost:5001/api/analyze-skills', {
+      const formData = new FormData();
+      if (file) formData.append('resume', file);
+      formData.append('target_role', role);
+      const res = await fetch('http://localhost:8000/api/analyze-skills', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categorized_skills: skills, target_role: role }),
+        body: formData,
       });
       if (!res.ok) throw new Error('Failed to analyze role match');
       const data = await res.json();
       setMatch(data.skill_match);
+      setSkills(data.categorized_skills);
     } catch (err: any) {
       setError(err.message || 'Error');
     }
@@ -143,14 +146,17 @@ export default function SkillGapPage() {
     setError("");
     setAIAdvice(null);
     try {
-      const res = await fetch('http://localhost:5001/api/ai-advice', {
+      const formData = new FormData();
+      if (file) formData.append('resume', file);
+      if (role) formData.append('target_role', role);
+      formData.append('gemini_advice', 'true');
+      const res = await fetch('http://localhost:8000/api/analyze-skills', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ missing_skills: match.missing_skills }),
+        body: formData,
       });
       if (!res.ok) throw new Error('Failed to get AI advice');
       const data = await res.json();
-      setAIAdvice(data.advice);
+      setAIAdvice(data.gemini_advice);
     } catch (err: any) {
       setError(err.message || 'Error');
     }

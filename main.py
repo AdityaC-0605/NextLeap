@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, HTTPException, Request
 import pandas as pd
 import numpy as np
@@ -231,6 +233,41 @@ async def cultural_match(request: Request):
     except Exception as e:
         logger.error(f"Cultural matching failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi import UploadFile, File, Form
+import shutil
+
+@app.post("/api/analyze-skills")
+async def analyze_skills(
+    resume: UploadFile = File(...),
+    target_role: str = Form(None),
+    gemini_advice: bool = Form(False)
+):
+    """
+    Analyze uploaded resume and return categorized skills (and skill match if target_role provided).
+    If gemini_advice is true and there are missing skills, return Gemini-powered advice for missing skills.
+    """
+    import os
+    import tempfile
+    try:
+        suffix = os.path.splitext(resume.filename)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(resume.file, tmp)
+            tmp_path = tmp.name
+        # Parse resume
+        result = resume_parser.parse_resume(tmp_path, target_role)
+        os.remove(tmp_path)
+        if not result:
+            raise HTTPException(status_code=500, detail="Failed to extract skills")
+
+        # If Gemini advice is requested and missing skills exist
+        if gemini_advice and result.get("skill_match") and result["skill_match"].get("missing_skills"):
+            missing_skills = result["skill_match"]["missing_skills"]
+            gemini_info = resume_parser.get_missing_skills_advice(missing_skills, gemini_advisor)
+            result["gemini_advice"] = gemini_info
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

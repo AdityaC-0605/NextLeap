@@ -15,7 +15,7 @@ class GeminiSkillsAdvisor:
                 raise ValueError("No API key provided and GEMINI_API_KEY not found in environment variables")
         
         # Configure the Gemini API
-        genai.configure(api_key="AIzaSyCKf18vh6Llc-2nZT3uToA-zwS-0y5GT2Y")
+        genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-2.0-flash')
     
     def get_skill_information(self, skill_name: str) -> str:
