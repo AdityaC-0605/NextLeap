@@ -24,11 +24,22 @@ import { useEffect, useState } from "react"
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false)
   const [typedText, setTypedText] = useState("")
+  const [particles, setParticles] = useState<Array<{ left: string; top: string; delay: string; duration: string }>>([])
+
   const testimonialText =
     "NextLeap helped me transition from marketing to product management in just 3 months! The AI recommendations were spot-on and the skill gap analysis was incredibly valuable."
 
   useEffect(() => {
     setIsVisible(true)
+
+    // Generate particles only on client side to avoid hydration mismatch
+    const newParticles = [...Array(20)].map(() => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 10}s`,
+      duration: `${10 + Math.random() * 20}s`,
+    }))
+    setParticles(newParticles)
 
     // Typewriter effect for testimonial
     let i = 0
@@ -49,15 +60,15 @@ export default function LandingPage() {
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="floating-particles">
-          {[...Array(20)].map((_, i) => (
+          {particles.map((particle, i) => (
             <div
               key={i}
               className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20 animate-float"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 10}s`,
-                animationDuration: `${10 + Math.random() * 20}s`,
+                left: particle.left,
+                top: particle.top,
+                animationDelay: particle.delay,
+                animationDuration: particle.duration,
               }}
             />
           ))}
