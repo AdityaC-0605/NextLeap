@@ -56,6 +56,7 @@ export default function CulturalMatch() {
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!preferences.trim()) return
+
     setLoading(true)
     setError("")
     try {
@@ -83,14 +84,14 @@ export default function CulturalMatch() {
 
   if (showOutput) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="floating-particles">
             {particles.map((particle, i) => (
               <div
                 key={i}
-                className="absolute w-2 h-2 bg-gradient-to-r from-violet-400 to-fuchsia-400 rounded-full opacity-30 animate-float"
+                className="absolute w-2 h-2 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-full opacity-20 animate-float"
                 style={{
                   left: particle.left,
                   top: particle.top,
@@ -105,10 +106,10 @@ export default function CulturalMatch() {
         <div className="max-w-6xl mx-auto p-6 space-y-6 relative z-10">
           {/* Header */}
           <div className="text-center space-y-4 mb-8 animate-fade-in-up">
-            <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
               Your Cultural Matches
             </h2>
-            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-300 max-w-3xl mx-auto">
               Companies that align with your values and work style preferences
             </p>
           </div>
@@ -118,7 +119,7 @@ export default function CulturalMatch() {
             <Button
               onClick={resetSearch}
               variant="outline"
-              className="hover:scale-105 transition-transform animate-slide-in-up border-violet-200 hover:border-violet-300 hover:bg-violet-50"
+              className="hover:scale-105 transition-transform animate-slide-in-up border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-slate-900 bg-transparent"
             >
               <ArrowRight className="w-4 h-4 mr-2 rotate-180" />
               New Search
@@ -132,7 +133,7 @@ export default function CulturalMatch() {
               return (
                 <Card
                   key={index}
-                  className={`border-0 shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-105 bg-white/90 backdrop-blur-sm ${
+                  className={`border-0 shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-105 bg-slate-800/90 backdrop-blur-sm border border-slate-700 ${
                     index < visibleCards ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                   }`}
                   style={{ animationDelay: `${index * 0.1}s` }}
@@ -140,7 +141,7 @@ export default function CulturalMatch() {
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-r from-violet-100 to-purple-100 rounded-lg flex items-center justify-center">
+                        <div className="w-12 h-12 bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-lg flex items-center justify-center">
                           {hasImage ? (
                             <img
                               src={company.image_path || "/placeholder.svg"}
@@ -148,34 +149,35 @@ export default function CulturalMatch() {
                               className="w-8 h-8 object-contain rounded"
                             />
                           ) : (
-                            <Building2 className="w-6 h-6 text-violet-600" />
+                            <Building2 className="w-6 h-6 text-teal-400" />
                           )}
                         </div>
                         <div>
-                          <CardTitle className="text-lg text-gray-900">{company.company_name}</CardTitle>
-                          <CardDescription className="text-sm text-gray-600">{company.industry}</CardDescription>
+                          <CardTitle className="text-lg text-white">{company.company_name}</CardTitle>
+                          <CardDescription className="text-sm text-slate-400">{company.industry}</CardDescription>
                         </div>
                       </div>
-                      <Badge className="bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700 border-emerald-200">
+                      <Badge className="bg-teal-500/20 text-teal-300 border-teal-500">
                         <Star className="w-3 h-3 mr-1" />
                         {(company.similarity_score * 100).toFixed(1)}%
                       </Badge>
                     </div>
                   </CardHeader>
+
                   <CardContent className="space-y-4">
                     {/* Location */}
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 text-blue-500" />
+                    <div className="flex items-center space-x-2 text-sm text-slate-400">
+                      <MapPin className="w-4 h-4 text-cyan-400" />
                       <span>{company.location}</span>
                     </div>
 
                     {/* Culture Description */}
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
-                        <Heart className="w-4 h-4 text-rose-500" />
-                        <span className="text-sm font-medium text-gray-700">Culture Highlights</span>
+                        <Heart className="w-4 h-4 text-teal-400" />
+                        <span className="text-sm font-medium text-slate-300">Culture Highlights</span>
                       </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <p className="text-sm text-slate-400 leading-relaxed">
                         {company.culture_description || "A dynamic workplace focused on innovation and collaboration."}
                       </p>
                     </div>
@@ -183,14 +185,14 @@ export default function CulturalMatch() {
                     {/* Match Score Visualization */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Culture Match</span>
-                        <span className="font-semibold text-violet-600">
+                        <span className="text-slate-400">Culture Match</span>
+                        <span className="font-semibold text-teal-300">
                           {(company.similarity_score * 100).toFixed(1)}%
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-slate-700 rounded-full h-2">
                         <div
-                          className="bg-gradient-to-r from-violet-500 to-fuchsia-500 h-2 rounded-full animate-progress-bar"
+                          className="bg-gradient-to-r from-teal-500 to-cyan-500 h-2 rounded-full animate-progress-bar"
                           style={{ width: `${company.similarity_score * 100}%` }}
                         ></div>
                       </div>
@@ -200,12 +202,16 @@ export default function CulturalMatch() {
                     <div className="flex space-x-2 pt-2">
                       <Button
                         size="sm"
-                        className="flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white"
+                        className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white"
                       >
                         <Users className="w-4 h-4 mr-1" />
                         Learn More
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1 border-violet-200 hover:bg-violet-50">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
+                      >
                         <Target className="w-4 h-4 mr-1" />
                         Apply
                       </Button>
@@ -217,25 +223,25 @@ export default function CulturalMatch() {
           </div>
 
           {/* Summary Card */}
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-violet-50 to-purple-50 animate-fade-in-up mt-8">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-slate-800/90 to-slate-700/90 animate-fade-in-up mt-8 border border-slate-600">
             <CardContent className="p-8 text-center">
               <div className="space-y-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto">
                   <Sparkles className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-semibold text-gray-900">Found Your Perfect Matches!</h3>
-                <p className="text-gray-600 max-w-2xl mx-auto">
+                <h3 className="text-2xl font-semibold text-white">Found Your Perfect Matches!</h3>
+                <p className="text-slate-300 max-w-2xl mx-auto">
                   These companies align with your cultural preferences and values. Ready to take the next step in your
                   career journey?
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                  <Button className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-8 py-3">
+                  <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-3">
                     <Building2 className="w-4 h-4 mr-2" />
                     Explore Companies
                   </Button>
                   <Button
                     variant="outline"
-                    className="px-8 py-3 border-violet-200 hover:bg-violet-50"
+                    className="px-8 py-3 border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
                     onClick={resetSearch}
                   >
                     <ArrowRight className="w-4 h-4 mr-2 rotate-180" />
@@ -257,7 +263,6 @@ export default function CulturalMatch() {
               transform: translateY(-20px);
             }
           }
-
           @keyframes fadeInUp {
             from {
               opacity: 0;
@@ -268,7 +273,6 @@ export default function CulturalMatch() {
               transform: translateY(0);
             }
           }
-
           @keyframes slideInUp {
             from {
               opacity: 0;
@@ -279,7 +283,6 @@ export default function CulturalMatch() {
               transform: translateY(0);
             }
           }
-
           @keyframes progressBar {
             from {
               width: 0%;
@@ -288,7 +291,6 @@ export default function CulturalMatch() {
               width: var(--progress-width);
             }
           }
-
           .animate-float {
             animation: float 6s ease-in-out infinite;
           }
@@ -308,14 +310,14 @@ export default function CulturalMatch() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="floating-particles">
           {particles.map((particle, i) => (
             <div
               key={i}
-              className="absolute w-2 h-2 bg-gradient-to-r from-violet-400 to-fuchsia-400 rounded-full opacity-30 animate-float"
+              className="absolute w-2 h-2 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-full opacity-20 animate-float"
               style={{
                 left: particle.left,
                 top: particle.top,
@@ -331,25 +333,25 @@ export default function CulturalMatch() {
         {/* Header */}
         <div className="text-center space-y-6 mb-12 animate-fade-in-up">
           <div className="space-y-4">
-            <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
               Cultural Match
             </h1>
-            <p className="text-2xl lg:text-3xl font-semibold text-gray-800">
+            <p className="text-2xl lg:text-3xl font-semibold text-white">
               What kind of company culture are you looking for?
             </p>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
               Describe your ideal work environment and we'll find companies that match your values and preferences.
             </p>
           </div>
         </div>
 
         {/* Search Form */}
-        <Card className="border-0 shadow-xl bg-white/95 backdrop-blur-sm animate-fade-in-up">
+        <Card className="border-0 shadow-xl bg-slate-800/90 backdrop-blur-sm animate-fade-in-up border border-slate-700">
           <CardContent className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                <label className="block text-lg font-medium text-gray-700">
-                  <Heart className="w-5 h-5 inline mr-2 text-rose-500" />
+                <label className="block text-lg font-medium text-slate-300">
+                  <Heart className="w-5 h-5 inline mr-2 text-teal-400" />
                   Describe Your Ideal Work Culture
                 </label>
                 <div className="relative">
@@ -357,14 +359,14 @@ export default function CulturalMatch() {
                     value={preferences}
                     onChange={(e) => setPreferences(e.target.value)}
                     placeholder="e.g., I value work-life balance, collaborative teams, innovation, remote flexibility, diversity and inclusion, learning opportunities..."
-                    className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition-all bg-white/90 backdrop-blur-sm resize-none"
+                    className="w-full p-4 pr-16 border border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-700/80 backdrop-blur-sm resize-none text-white placeholder-slate-400"
                     rows={4}
                     required
                   />
                   <Button
                     type="submit"
                     disabled={loading || !preferences.trim()}
-                    className="absolute bottom-3 right-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute bottom-3 right-3 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -373,7 +375,7 @@ export default function CulturalMatch() {
                     )}
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   Be specific about what matters most to you in a workplace - values, environment, benefits, team
                   dynamics, etc.
                 </p>
@@ -382,14 +384,14 @@ export default function CulturalMatch() {
 
             {/* Error Display */}
             {error && (
-              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg animate-slide-in-up">
+              <div className="mt-6 p-4 bg-red-900/50 border border-red-600 rounded-lg animate-slide-in-up">
                 <div className="flex items-center space-x-2">
                   <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-xs">!</span>
                   </div>
-                  <span className="text-red-700 font-medium">Error</span>
+                  <span className="text-red-300 font-medium">Error</span>
                 </div>
-                <p className="text-red-600 mt-1">{error}</p>
+                <p className="text-red-300 mt-1">{error}</p>
               </div>
             )}
           </CardContent>
@@ -402,37 +404,32 @@ export default function CulturalMatch() {
               icon: Building2,
               title: "Company Matching",
               desc: "Find companies that align with your values and work style",
-              gradient: "from-blue-100 to-indigo-100",
-              iconColor: "text-blue-600",
+              iconColor: "text-teal-400",
             },
             {
               icon: Users,
               title: "Culture Analysis",
               desc: "Deep insights into company culture and team dynamics",
-              gradient: "from-rose-100 to-pink-100",
-              iconColor: "text-rose-600",
+              iconColor: "text-cyan-400",
             },
             {
               icon: Target,
               title: "Perfect Fit",
               desc: "Get matched with workplaces where you'll truly thrive",
-              gradient: "from-emerald-100 to-green-100",
-              iconColor: "text-emerald-600",
+              iconColor: "text-teal-400",
             },
           ].map((feature, index) => (
             <Card
               key={index}
-              className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-slide-in-up bg-white/90 backdrop-blur-sm"
+              className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-slide-in-up bg-slate-800/80 backdrop-blur-sm border border-slate-700"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardContent className="p-6 text-center">
-                <div
-                  className={`w-12 h-12 bg-gradient-to-r ${feature.gradient} rounded-lg flex items-center justify-center mx-auto mb-4`}
-                >
+                <div className="w-12 h-12 bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <feature.icon className={`w-6 h-6 ${feature.iconColor}`} />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600 text-sm">{feature.desc}</p>
+                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-slate-400 text-sm">{feature.desc}</p>
               </CardContent>
             </Card>
           ))}
@@ -449,7 +446,6 @@ export default function CulturalMatch() {
             transform: translateY(-20px);
           }
         }
-
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -460,7 +456,6 @@ export default function CulturalMatch() {
             transform: translateY(0);
           }
         }
-
         @keyframes slideInUp {
           from {
             opacity: 0;
@@ -471,7 +466,6 @@ export default function CulturalMatch() {
             transform: translateY(0);
           }
         }
-
         .animate-float {
           animation: float 6s ease-in-out infinite;
         }
