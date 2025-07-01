@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward to Python backend
-    const pythonUrl = process.env.PYTHON_SERVER_URL || "http://localhost:5001/api/analyze-skills";
+    const pythonUrl = process.env.PYTHON_SERVER_URL || "/api/analyze-skills";
 
     const forwardForm = new FormData();
     forwardForm.append("resume", file);
