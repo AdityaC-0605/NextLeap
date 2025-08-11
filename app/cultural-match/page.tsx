@@ -6,6 +6,7 @@ import { Send, Building2, MapPin, Users, Star, ArrowRight, Sparkles, Target, Hea
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
 
 interface CompanyRecommendation {
   company_name: string
@@ -17,6 +18,7 @@ interface CompanyRecommendation {
 }
 
 export default function CulturalMatch() {
+  const { toast } = useToast()
   const [preferences, setPreferences] = useState("")
   const [loading, setLoading] = useState(false)
   const [recommendations, setRecommendations] = useState<CompanyRecommendation[]>([])
@@ -60,16 +62,22 @@ export default function CulturalMatch() {
     setLoading(true)
     setError("")
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/cultural-match`, {
+      const response = await fetch(`/api/cultural-match`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ preferences, top_n: 5 }),
       })
       if (!response.ok) throw new Error("Failed to get company recommendations")
       const data = await response.json()
-      setRecommendations(data.recommendations)
+      const recs = Array.isArray(data) ? data : data?.recommendations
+      if (!Array.isArray(recs)) {
+        throw new Error("Invalid response from server")
+      }
+      setRecommendations(recs)
     } catch (err: any) {
-      setError(err.message || "Failed to get recommendations")
+      const msg = err.message || "Failed to get recommendations"
+      setError(msg)
+      toast({ title: "Cultural match failed", description: msg, variant: "destructive" })
     } finally {
       setLoading(false)
     }
@@ -143,11 +151,7 @@ export default function CulturalMatch() {
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-lg flex items-center justify-center">
                           {hasImage ? (
-                            <img
-                              src={company.image_path || "/placeholder.svg"}
-                              alt={company.company_name}
-                              className="w-8 h-8 object-contain rounded"
-                            />
+                            <img src={company.image_path || "/placeholder.svg"} alt={company.company_name} className="w-8 h-8 object-contain rounded" />
                           ) : (
                             <Building2 className="w-6 h-6 text-teal-400" />
                           )}

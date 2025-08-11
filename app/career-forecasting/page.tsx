@@ -22,6 +22,7 @@ import {
   AlertCircle,
 } from "lucide-react"
 import { getCareerRecommendations, getFresherRecommendations } from "@/lib/career-model"
+import { useToast } from "@/hooks/use-toast"
 
 interface Recommendation {
   next_role: string
@@ -34,6 +35,7 @@ interface Recommendation {
 }
 
 export default function CareerForecasting() {
+  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [error, setError] = useState("")
@@ -63,8 +65,10 @@ export default function CareerForecasting() {
         current_salary: Number.parseFloat(currentSalary),
       })
       setRecommendations(response)
-    } catch (err: any) {
-      setError(err.message || "Failed to get recommendations")
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to get recommendations"
+      setError(errorMessage)
+      toast({ title: "Request failed", description: errorMessage, variant: "destructive" })
     } finally {
       setLoading(false)
     }
@@ -78,8 +82,10 @@ export default function CareerForecasting() {
       const skillsList = skills.split(",").map((skill) => skill.trim())
       const response = await getFresherRecommendations(skillsList)
       setRecommendations(response)
-    } catch (err: any) {
-      setError(err.message || "Failed to get recommendations")
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to get recommendations"
+      setError(errorMessage)
+      toast({ title: "Request failed", description: errorMessage, variant: "destructive" })
     } finally {
       setLoading(false)
     }

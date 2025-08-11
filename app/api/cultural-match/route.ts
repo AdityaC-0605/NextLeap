@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
     console.log('Received request');
     const { preferences, top_n } = await request.json();
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const pythonScriptPath = path.join(process.cwd(), 'culturematch.py');
     console.log('Python script path:', pythonScriptPath);
 
-    const pythonProcess = spawn('python', [
+    const pythonProcess = spawn('python3', [
       pythonScriptPath,
       '--input',
       preferences,
@@ -35,16 +35,18 @@ export async function POST(request: Request) {
     });
 
     // Handle process completion
-    return new Promise((resolve, reject) => {
+    const result = await new Promise<NextResponse>((resolve) => {
       pythonProcess.on('close', (code) => {
         console.log('Python process closed with code:', code);
         if (code !== 0) {
           console.error(`Python process exited with code ${code}`);
           console.error('Error data:', errorData);
-          resolve(NextResponse.json(
-            { error: 'Failed to process cultural match request' },
-            { status: 500 }
-          ));
+          resolve(
+            NextResponse.json(
+              { error: 'Failed to process cultural match request' },
+              { status: 500 }
+            )
+          );
           return;
         }
 
@@ -55,13 +57,16 @@ export async function POST(request: Request) {
           resolve(NextResponse.json(recommendations));
         } catch (error) {
           console.error('Failed to parse Python output:', error);
-          resolve(NextResponse.json(
-            { error: 'Failed to parse cultural match results' },
-            { status: 500 }
-          ));
+          resolve(
+            NextResponse.json(
+              { error: 'Failed to parse cultural match results' },
+              { status: 500 }
+            )
+          );
         }
       });
     });
+    return result;
   } catch (error) {
     console.error('Error in cultural match API:', error);
     return NextResponse.json(

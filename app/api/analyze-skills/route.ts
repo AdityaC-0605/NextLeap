@@ -5,30 +5,18 @@ export const runtime = 'edge'; // required for formData()
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get("resume");
 
-    if (!file || !(file instanceof File)) {
-      return NextResponse.json(
-        { error: "No valid resume file provided" },
-        { status: 400 }
-      );
-    }
-
-    // Forward to Python backend
-    const pythonUrl = process.env.PYTHON_SERVER_URL || "http://localhost:5001/api/analyze-skills";
-
-    const forwardForm = new FormData();
-    forwardForm.append("resume", file);
-
-    const response = await fetch(pythonUrl, {
+    // Forward to FastAPI backend (single server for all features)
+    const base = (process.env.PYTHON_FASTAPI_URL || 'http://localhost:8000').replace(/\/$/, '')
+    const response = await fetch(`${base}/api/analyze-skills`, {
       method: "POST",
-      body: forwardForm,
+      body: formData,
     });
 
     const data = await response.json();
     if (!response.ok) {
       return NextResponse.json(
-        { error: data?.error || "Python server error" },
+        { error: data?.detail || data?.error || "Python server error" },
         { status: response.status }
       );
     }

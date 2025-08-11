@@ -12,10 +12,12 @@ class GeminiSkillsAdvisor:
         if api_key is None:
             api_key = os.environ.get("GEMINI_API_KEY")
             if not api_key:
-                raise ValueError("No API key provided and GEMINI_API_KEY not found in environment variables")
-        
-        # Configure the Gemini API
-        genai.configure(api_key="AIzaSyCKf18vh6Llc-2nZT3uToA-zwS-0y5GT2Y")
+                raise ValueError(
+                    "No API key provided and GEMINI_API_KEY not found in environment variables"
+                )
+
+        # Configure the Gemini API (no hardcoded keys)
+        genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-2.0-flash')
     
     def get_skill_information(self, skill_name: str) -> str:

@@ -69,6 +69,36 @@
   }
 }
 
+/* Glass morphism effects - moved from styled-jsx */
+.glass-nav-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(20, 184, 166, 0.2);
+}
+
+.glass-card-dark {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.animate-glow-teal {
+  animation: glowTeal 3s ease-in-out infinite;
+}
+
+.shadow-glow-teal {
+  box-shadow: 0 0 40px rgba(20, 184, 166, 0.3);
+}
+
+@keyframes glowTeal {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(20, 184, 166, 0.6);
+  }
+}
+
 /* Premium animations and effects */
 @keyframes fadeInScale {
   from {

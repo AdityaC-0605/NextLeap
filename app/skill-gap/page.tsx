@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Upload, FileText, Brain, Target, Zap, CheckCircle, AlertCircle, Star, ArrowRight, Award } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 const ROLES = [
   "Software Developer / Engineer",
@@ -78,6 +79,7 @@ const ROLES = [
 ]
 
 export default function SkillGapAnalyzer() {
+  const { toast } = useToast()
   const [file, setFile] = useState<File | null>(null)
   const [skills, setSkills] = useState<any>(null)
   const [step, setStep] = useState<1 | 2>(1)
@@ -165,7 +167,7 @@ export default function SkillGapAnalyzer() {
     formData.append("resume", file)
 
     try {
-      const res = await fetch("http://localhost:8000/api/analyze-skills", {
+      const res = await fetch("/api/analyze-skills", {
         method: "POST",
         body: formData,
       })
@@ -174,7 +176,9 @@ export default function SkillGapAnalyzer() {
       setSkills(data.categorized_skills)
       setStep(1)
     } catch (err: any) {
-      setError(err.message || "Error")
+      const msg = err.message || "Error"
+      setError(msg)
+      toast({ title: "Upload failed", description: msg, variant: "destructive" })
     } finally {
       setIsAnalyzing(false)
     }
@@ -198,7 +202,7 @@ export default function SkillGapAnalyzer() {
       if (file) formData.append("resume", file)
       formData.append("target_role", role)
 
-      const res = await fetch("http://localhost:8000/api/analyze-skills", {
+      const res = await fetch("/api/analyze-skills", {
         method: "POST",
         body: formData,
       })
@@ -207,7 +211,9 @@ export default function SkillGapAnalyzer() {
       setMatch(data.skill_match)
       setSkills(data.categorized_skills)
     } catch (err: any) {
-      setError(err.message || "Error")
+      const msg = err.message || "Error"
+      setError(msg)
+      toast({ title: "Analysis failed", description: msg, variant: "destructive" })
     } finally {
       setIsAnalyzing(false)
     }
@@ -219,20 +225,31 @@ export default function SkillGapAnalyzer() {
     setIsAnalyzing(true)
 
     try {
-      const formData = new FormData()
-      if (file) formData.append("resume", file)
-      if (role) formData.append("target_role", role)
-      formData.append("gemini_advice", "true")
-
-      const res = await fetch("http://localhost:8000/api/analyze-skills", {
-        method: "POST",
-        body: formData,
-      })
-      if (!res.ok) throw new Error("Failed to get AI advice")
-      const data = await res.json()
-      setAIAdvice(data.gemini_advice)
+      // Prefer direct AI advice call if skills/missing skills are already known
+      if (Array.isArray(match?.missing_skills) && match.missing_skills.length) {
+        const res = await fetch("/api/ai-advice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ missing_skills: match.missing_skills }),
+        })
+        if (!res.ok) throw new Error("Failed to get AI advice")
+        const data = await res.json()
+        setAIAdvice(data.advice)
+      } else {
+        // Fallback: re-run analyze-skills with gemini flag if missing_skills absent
+        const formData = new FormData()
+        if (file) formData.append("resume", file)
+        if (role) formData.append("target_role", role)
+        formData.append("gemini_advice", "true")
+        const res = await fetch("/api/analyze-skills", { method: "POST", body: formData })
+        if (!res.ok) throw new Error("Failed to get AI advice")
+        const data = await res.json()
+        setAIAdvice(data.gemini_advice || data.advice)
+      }
     } catch (err: any) {
-      setError(err.message || "Error")
+      const msg = err.message || "Error"
+      setError(msg)
+      toast({ title: "AI advice failed", description: msg, variant: "destructive" })
     } finally {
       setIsAnalyzing(false)
     }

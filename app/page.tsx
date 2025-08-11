@@ -56,7 +56,7 @@ export default function LandingPage() {
     setParticles(newParticles)
 
     // Mouse tracking for interactive effects
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
 
@@ -100,49 +100,7 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* Premium Navigation */}
-      <nav className="glass-nav-dark sticky top-0 z-50 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3 animate-slide-in-blur">
-              <div className="w-9 h-9 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg animate-glow-teal">
-                <Brain className="w-5 h-5 text-slate-900" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-white to-teal-100 bg-clip-text text-transparent">
-                NextLeap
-              </span>
-            </div>
-
-            <div className="hidden md:flex items-center space-x-8 animate-slide-in-blur-right">
-              {[
-                { href: "/career-forecasting", label: "Career Forecasting" },
-                { href: "/skill-gap", label: "Skill Analysis" },
-                { href: "/cultural-match", label: "Culture Match" },
-                { href: "#about", label: "About" },
-              ].map((item, index) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-slate-300 hover:text-teal-400 transition-all duration-200 font-medium text-sm relative group"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {item.label}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-teal-400 to-cyan-400 transition-all duration-300 group-hover:w-full" />
-                </Link>
-              ))}
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="glass-card-dark border-teal-400/30 hover:border-teal-400 hover:bg-teal-400/10 text-teal-400 transition-all duration-200 font-medium focus-ring animate-button-press"
-              >
-                Get Started
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Navigation moved to shared Header */}
 
       {/* Hero Section - Premium Design */}
       <section className="relative py-20 lg:py-32">
@@ -592,107 +550,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Premium Footer */}
-      <footer className="bg-slate-900 text-slate-300 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="space-y-6 animate-slide-in-blur">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg">
-                  <Brain className="w-5 h-5 text-slate-900" />
-                </div>
-                <span className="text-xl font-bold text-white">NextLeap</span>
-              </div>
-              <p className="text-slate-400 leading-relaxed font-medium">
-                AI-powered career intelligence platform helping professionals make smarter career decisions and
-                accelerate their growth.
-              </p>
-              <div className="flex space-x-4">
-                {[Twitter, Linkedin, Mail].map((Icon, index) => (
-                  <Link
-                    key={index}
-                    href="#"
-                    className="w-10 h-10 bg-slate-800 hover:bg-teal-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
-                  >
-                    <Icon className="w-4 h-4" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {[
-              {
-                title: "Product",
-                links: ["Features", "How It Works", "Pricing", "API", "Integrations"],
-              },
-              {
-                title: "Company",
-                links: ["About", "Blog", "Careers", "Contact", "Press"],
-              },
-              {
-                title: "Legal",
-                links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "GDPR", "Security"],
-              },
-            ].map((section, index) => (
-              <div
-                key={index}
-                className="space-y-6 animate-fade-in-scale"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <h3 className="font-bold text-white text-lg">{section.title}</h3>
-                <ul className="space-y-3 text-slate-400">
-                  {section.links.map((link, linkIndex) => (
-                    <li key={linkIndex}>
-                      <Link
-                        href="#"
-                        className="hover:text-teal-400 transition-colors duration-200 font-medium hover:translate-x-1 transform inline-block"
-                      >
-                        {link}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center animate-fade-in-scale">
-            <p className="text-slate-400 font-medium">© 2024 NextLeap. All rights reserved.</p>
-            <p className="text-slate-500 text-sm mt-4 md:mt-0">Made with ❤️ for career growth</p>
-          </div>
-        </div>
-      </footer>
-
-      <style jsx>{`
-        .glass-nav-dark {
-          background: rgba(15, 23, 42, 0.8);
-          backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(20, 184, 166, 0.2);
-        }
-
-        .glass-card-dark {
-          background: rgba(30, 41, 59, 0.8);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(71, 85, 105, 0.3);
-        }
-
-        .animate-glow-teal {
-          animation: glowTeal 3s ease-in-out infinite;
-        }
-
-        .shadow-glow-teal {
-          box-shadow: 0 0 40px rgba(20, 184, 166, 0.3);
-        }
-
-        @keyframes glowTeal {
-          0%, 100% {
-            box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 30px rgba(20, 184, 166, 0.6);
-          }
-        }
-      `}</style>
+      {/* Footer is shared in layout */}
     </div>
   )
 }

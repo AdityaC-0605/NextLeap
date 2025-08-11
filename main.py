@@ -10,7 +10,8 @@ from sklearn.preprocessing import LabelEncoder
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from resume_parser import ResumeParser
-from gemini_integration import GeminiSkillsAdvisor
+# Gemini client is optional; import lazily only when needed to avoid startup failures
+# from gemini_integration import GeminiSkillsAdvisor
 from culturematch import CulturalMatcher
 
 app = FastAPI()
@@ -145,8 +146,10 @@ for _ in range(10000):
     q_table[current_role, action] = (1 - alpha) * q_table[current_role, action] + alpha * (reward + gamma * np.max(q_table[next_role]))
 
 # Resume and Culture systems
+# Initialize resume parser (requires spaCy model); do this once
 resume_parser = ResumeParser()
-gemini_advisor = GeminiSkillsAdvisor()
+
+# Initialize cultural matcher
 cultural_matcher = CulturalMatcher()
 
 @app.get("/health")
@@ -260,14 +263,52 @@ async def analyze_skills(
         if not result:
             raise HTTPException(status_code=500, detail="Failed to extract skills")
 
-        # If Gemini advice is requested and missing skills exist
+        # If Gemini advice is requested and missing skills exist, try to use Gemini client
         if gemini_advice and result.get("skill_match") and result["skill_match"].get("missing_skills"):
-            missing_skills = result["skill_match"]["missing_skills"]
-            gemini_info = resume_parser.get_missing_skills_advice(missing_skills, gemini_advisor)
-            result["gemini_advice"] = gemini_info
+            try:
+                from gemini_integration import GeminiSkillsAdvisor  # lazy import
+                gemini_advisor = GeminiSkillsAdvisor()  # reads GEMINI_API_KEY from env
+                missing_skills = result["skill_match"]["missing_skills"]
+                gemini_info = resume_parser.get_missing_skills_advice(missing_skills, gemini_advisor)
+                result["gemini_advice"] = gemini_info
+            except Exception as e:
+                # If Gemini isn't configured, continue without blocking the request
+                result["gemini_advice_error"] = f"Gemini not configured: {str(e)}"
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+# New: AI advice endpoint that calls Gemini directly with provided missing skills
+from pydantic import BaseModel
+
+class AdviceRequest(BaseModel):
+    missing_skills: list[str]
+
+@app.post("/api/ai-advice")
+async def ai_advice(req: AdviceRequest):
+    try:
+        if not req.missing_skills:
+            raise HTTPException(status_code=400, detail="missing_skills is required")
+        from gemini_integration import GeminiSkillsAdvisor  # lazy import
+        try:
+            advisor = GeminiSkillsAdvisor()  # uses GEMINI_API_KEY
+            info = advisor.get_missing_skills_info(req.missing_skills)
+            return {"advice": info}
+        except Exception as e:
+            # Fallback when Gemini isn't configured; return helpful stub guidance
+            fallback = {}
+            for skill in req.missing_skills:
+                fallback[skill] = (
+                    f"What it is: Overview of {skill}.\n"
+                    f"Why it matters: In-demand skill for the target role.\n"
+                    f"How to learn: 1) Official docs, 2) One top course, 3) Build one mini-project.\n"
+                    f"Resources: Search '{skill} crash course', 'freeCodeCamp {skill}', or vendor docs."
+                )
+            return {"advice": fallback, "advice_error": str(e)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gemini advice failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
