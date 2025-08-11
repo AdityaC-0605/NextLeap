@@ -1,77 +1,29 @@
-import { NextResponse } from 'next/server';
-import { spawn } from 'child_process';
-import path from 'path';
+import { NextResponse } from 'next/server'
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
-    console.log('Received request');
-    const { preferences, top_n } = await request.json();
-    console.log('Request data:', { preferences, top_n });
+    const body = await request.json()
+    const pythonUrl =
+      process.env.PYTHON_FASTAPI_URL?.replace(/\/$/, '') || 'http://localhost:8000'
 
-    // Create a Python process
-    const pythonScriptPath = path.join(process.cwd(), 'culturematch.py');
-    console.log('Python script path:', pythonScriptPath);
+    const resp = await fetch(`${pythonUrl}/api/cultural-match`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
 
-    const pythonProcess = spawn('python3', [
-      pythonScriptPath,
-      '--input',
-      preferences,
-      '--top_n',
-      top_n.toString()
-    ]);
-
-    let outputData = '';
-    let errorData = '';
-
-    // Collect data from script
-    pythonProcess.stdout.on('data', (data) => {
-      console.log('Received stdout data:', data.toString());
-      outputData += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      console.error('Received stderr data:', data.toString());
-      errorData += data.toString();
-    });
-
-    // Handle process completion
-    const result = await new Promise<NextResponse>((resolve) => {
-      pythonProcess.on('close', (code) => {
-        console.log('Python process closed with code:', code);
-        if (code !== 0) {
-          console.error(`Python process exited with code ${code}`);
-          console.error('Error data:', errorData);
-          resolve(
-            NextResponse.json(
-              { error: 'Failed to process cultural match request' },
-              { status: 500 }
-            )
-          );
-          return;
-        }
-
-        try {
-          console.log('Parsing output data:', outputData);
-          const recommendations = JSON.parse(outputData);
-          console.log('Successfully parsed recommendations');
-          resolve(NextResponse.json(recommendations));
-        } catch (error) {
-          console.error('Failed to parse Python output:', error);
-          resolve(
-            NextResponse.json(
-              { error: 'Failed to parse cultural match results' },
-              { status: 500 }
-            )
-          );
-        }
-      });
-    });
-    return result;
-  } catch (error) {
-    console.error('Error in cultural match API:', error);
+    const data = await resp.json().catch(() => ({}))
+    if (!resp.ok) {
+      return NextResponse.json(
+        { error: data?.detail || 'Python server error' },
+        { status: resp.status }
+      )
+    }
+    return NextResponse.json(data)
+  } catch (e: any) {
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: e?.message || 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
-} 
+}

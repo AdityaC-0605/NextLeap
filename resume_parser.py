@@ -8,8 +8,13 @@ import spacy
 
 class ResumeParser:
     def __init__(self):
-        # Load the spaCy model for NER and text processing
-        self.nlp = spacy.load('en_core_web_lg')
+        # Load the spaCy model for NER and text processing.
+        # Prefer the large English model; fall back to the small model when the large one isn't available
+        # (useful for lightweight deployments like Render free tier).
+        try:
+            self.nlp = spacy.load('en_core_web_lg')
+        except Exception:
+            self.nlp = spacy.load('en_core_web_sm')
         
         # Define common section headers in resumes
         self.section_headers = {
