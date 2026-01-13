@@ -16,7 +16,7 @@ class GeminiSkillsAdvisor:
         
         # Configure the Gemini API
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash')
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
     
     def get_skill_information(self, skill_name: str) -> str:
         """
@@ -40,7 +40,15 @@ class GeminiSkillsAdvisor:
             response = self.model.generate_content(prompt)
             return response.text
         except Exception as e:
-            return f"Error fetching information about {skill_name}: {str(e)}"
+            # Fallback for when API quota is exceeded or other errors occur
+            print(f"Gemini API Error for {skill_name}: {str(e)}")
+            return (
+                f"**{skill_name}** is a valuable technical skill. "
+                "While our AI advisor is currently experiencing high traffic, "
+                "we recommend checking official documentation and interactive courses "
+                "on platforms like Coursera, Udemy, or freeCodeCamp to get started. "
+                "Typical learning time for basics is 2-4 weeks."
+            )
     
     def get_missing_skills_info(self, missing_skills: List[str]) -> dict:
         """

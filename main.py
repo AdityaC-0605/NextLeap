@@ -4,12 +4,8 @@ from fastapi import FastAPI, HTTPException, Request
 import pandas as pd
 import numpy as np
 import random
-try:
-    import gym
-    from gym import spaces
-except Exception:
-    import gymnasium as gym
-    from gymnasium import spaces
+import gymnasium as gym
+from gymnasium import spaces
 from sklearn.preprocessing import LabelEncoder
 import logging
 from fastapi.middleware.cors import CORSMiddleware
