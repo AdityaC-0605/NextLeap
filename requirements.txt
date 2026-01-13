@@ -2,10 +2,10 @@ fastapi==0.115.6
 uvicorn==0.32.1
 pydantic==2.11.7
 python-dotenv==1.0.1
-numpy>=2.3.0,<2.4.0
+numpy>=1.26.0
 pandas==2.3.1
 scikit-learn==1.6.1
-scipy==1.15.1
+scipy>=1.13.0
 PyPDF2==3.0.1
 docx2txt==0.9
 spacy==3.8.7
@@ -14,4 +14,4 @@ google-generativeai==0.8.5
 jinja2==3.1.6
 python-multipart==0.0.18
 requests==2.32.4
-gymnasium==0.31.0
+gymnasium>=0.29.0
