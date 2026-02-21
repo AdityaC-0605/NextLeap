@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 
 interface PerformanceMetrics {
   fcp: number | null
@@ -11,7 +11,7 @@ interface PerformanceMetrics {
 }
 
 export function usePerformance() {
-  const metrics = useRef<PerformanceMetrics>({
+  const [metrics, setMetrics] = useState<PerformanceMetrics>({
     fcp: null,
     lcp: null,
     fid: null,
@@ -20,12 +20,16 @@ export function usePerformance() {
   })
 
   useEffect(() => {
+    const updateMetrics = (partial: Partial<PerformanceMetrics>) => {
+      setMetrics((prev) => ({ ...prev, ...partial }))
+    }
+
     // First Contentful Paint
     const fcpObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries()
       const fcpEntry = entries.find(entry => entry.name === 'first-contentful-paint')
       if (fcpEntry) {
-        metrics.current.fcp = fcpEntry.startTime
+        updateMetrics({ fcp: fcpEntry.startTime })
         console.log('FCP:', fcpEntry.startTime)
       }
     })
@@ -36,7 +40,7 @@ export function usePerformance() {
       const entries = list.getEntries()
       const lcpEntry = entries[entries.length - 1]
       if (lcpEntry) {
-        metrics.current.lcp = lcpEntry.startTime
+        updateMetrics({ lcp: lcpEntry.startTime })
         console.log('LCP:', lcpEntry.startTime)
       }
     })
@@ -47,16 +51,17 @@ export function usePerformance() {
       const fidObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'first-input') {
-            const anyEntry = entry as any
+            const anyEntry = entry as PerformanceEntry & { processingStart?: number }
             const fid = (anyEntry.processingStart ?? anyEntry.startTime) - anyEntry.startTime
-            metrics.current.fid = typeof fid === 'number' ? fid : null
-            if (metrics.current.fid != null) {
-              console.log('FID:', metrics.current.fid)
+            const nextFid = typeof fid === 'number' ? fid : null
+            updateMetrics({ fid: nextFid })
+            if (nextFid != null) {
+              console.log('FID:', nextFid)
             }
           }
         }
       })
-      fidObserver.observe({ entryTypes: ['first-input'] as any })
+      fidObserver.observe({ entryTypes: ['first-input'] })
     } catch {
       // Ignore if not supported
     }
@@ -66,10 +71,10 @@ export function usePerformance() {
       let clsValue = 0
       list.getEntries().forEach(entry => {
         if (entry.entryType === 'layout-shift') {
-          clsValue += (entry as any).value
+          clsValue += (entry as PerformanceEntry & { value?: number }).value ?? 0
         }
       })
-      metrics.current.cls = clsValue
+      updateMetrics({ cls: clsValue })
       console.log('CLS:', clsValue)
     })
     clsObserver.observe({ entryTypes: ['layout-shift'] })
@@ -77,8 +82,9 @@ export function usePerformance() {
     // Time to First Byte
     const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
     if (navigationEntry) {
-      metrics.current.ttfb = navigationEntry.responseStart - navigationEntry.requestStart
-      console.log('TTFB:', metrics.current.ttfb)
+      const ttfb = navigationEntry.responseStart - navigationEntry.requestStart
+      updateMetrics({ ttfb })
+      console.log('TTFB:', ttfb)
     }
 
     return () => {
@@ -89,7 +95,7 @@ export function usePerformance() {
     }
   }, [])
 
-  return metrics.current
+  return metrics
 }
 
 // Performance optimization utilities

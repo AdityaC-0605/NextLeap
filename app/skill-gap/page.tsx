@@ -78,6 +78,8 @@ const ROLES = [
   "IT Consultant",
 ]
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || ""
+
 export default function SkillGapAnalyzer() {
   const { toast } = useToast()
   const [file, setFile] = useState<File | null>(null)
@@ -167,7 +169,7 @@ export default function SkillGapAnalyzer() {
     formData.append("resume", file)
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/analyze-skills`, {
+      const res = await fetch(`${API_BASE}/api/analyze-skills`, {
         method: "POST",
         body: formData,
       })
@@ -202,7 +204,7 @@ export default function SkillGapAnalyzer() {
       if (file) formData.append("resume", file)
       formData.append("target_role", role)
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/analyze-skills`, {
+      const res = await fetch(`${API_BASE}/api/analyze-skills`, {
         method: "POST",
         body: formData,
       })
@@ -227,7 +229,7 @@ export default function SkillGapAnalyzer() {
     try {
       // Prefer direct AI advice call if skills/missing skills are already known
       if (Array.isArray(match?.missing_skills) && match.missing_skills.length) {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/ai-advice`, {
+        const res = await fetch(`${API_BASE}/api/ai-advice`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ missing_skills: match.missing_skills }),
@@ -241,7 +243,7 @@ export default function SkillGapAnalyzer() {
         if (file) formData.append("resume", file)
         if (role) formData.append("target_role", role)
         formData.append("gemini_advice", "true")
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/analyze-skills`, { method: "POST", body: formData })
+        const res = await fetch(`${API_BASE}/api/analyze-skills`, { method: "POST", body: formData })
         if (!res.ok) throw new Error("Failed to get AI advice")
         const data = await res.json()
         setAIAdvice(data.gemini_advice || data.advice)
@@ -478,7 +480,7 @@ export default function SkillGapAnalyzer() {
                   Select Your Target Role
                 </CardTitle>
                 <CardDescription className="text-lg text-slate-300">
-                  Choose the role you're aiming for to get personalized skill gap analysis
+                  Choose the role you&apos;re aiming for to get personalized skill gap analysis
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -615,7 +617,7 @@ export default function SkillGapAnalyzer() {
                             variant="outline"
                             className="px-8 py-3 hover:scale-105 transition-transform border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
                           >
-                            No, I'm Done
+                            No, I&apos;m Done
                           </Button>
                         </div>
                       </div>

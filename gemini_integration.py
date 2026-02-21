@@ -1,6 +1,9 @@
 import google.generativeai as genai
 from typing import List
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GeminiSkillsAdvisor:
     def __init__(self, api_key=None):
@@ -17,6 +20,20 @@ class GeminiSkillsAdvisor:
         # Configure the Gemini API
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self._quota_unavailable = False
+
+    def _fallback_message(self, skill_name: str) -> str:
+        return (
+            f"**{skill_name}** is a valuable technical skill. "
+            "While our AI advisor is currently experiencing high traffic, "
+            "we recommend checking official documentation and interactive courses "
+            "on platforms like Coursera, Udemy, or freeCodeCamp to get started. "
+            "Typical learning time for basics is 2-4 weeks."
+        )
+
+    def _is_quota_error(self, error: Exception) -> bool:
+        msg = str(error).upper()
+        return "RATE_LIMIT_EXCEEDED" in msg or "QUOTA" in msg or "429" in msg
     
     def get_skill_information(self, skill_name: str) -> str:
         """
@@ -36,19 +53,19 @@ class GeminiSkillsAdvisor:
         Keep the entire response under 150 words.
         """
         
+        if self._quota_unavailable:
+            return self._fallback_message(skill_name)
+
         try:
             response = self.model.generate_content(prompt)
             return response.text
         except Exception as e:
-            # Fallback for when API quota is exceeded or other errors occur
-            print(f"Gemini API Error for {skill_name}: {str(e)}")
-            return (
-                f"**{skill_name}** is a valuable technical skill. "
-                "While our AI advisor is currently experiencing high traffic, "
-                "we recommend checking official documentation and interactive courses "
-                "on platforms like Coursera, Udemy, or freeCodeCamp to get started. "
-                "Typical learning time for basics is 2-4 weeks."
-            )
+            if self._is_quota_error(e):
+                self._quota_unavailable = True
+                logger.warning("Gemini quota unavailable (429/rate-limit). Using fallback advice for this request.")
+            else:
+                logger.warning("Gemini API error for skill '%s': %s", skill_name, e)
+            return self._fallback_message(skill_name)
     
     def get_missing_skills_info(self, missing_skills: List[str]) -> dict:
         """
