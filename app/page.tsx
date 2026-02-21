@@ -27,34 +27,37 @@ import {
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
+type Particle = {
+  left: string
+  top: string
+  delay: string
+  duration: string
+  size: string
+  opacity: string
+}
+
+function seeded01(seed: number) {
+  const x = Math.sin(seed * 12.9898) * 43758.5453
+  return x - Math.floor(x)
+}
+
+const PARTICLES: Particle[] = Array.from({ length: 15 }, (_, i) => {
+  const seed = i + 1
+  return {
+    left: `${(seeded01(seed * 2) * 100).toFixed(6)}%`,
+    top: `${(seeded01(seed * 3) * 100).toFixed(6)}%`,
+    delay: `${(seeded01(seed * 5) * 10).toFixed(6)}s`,
+    duration: `${(20 + seeded01(seed * 7) * 30).toFixed(6)}s`,
+    size: `${(2 + seeded01(seed * 11) * 4).toFixed(6)}px`,
+    opacity: `${(0.2 + seeded01(seed * 13) * 0.4).toFixed(6)}`,
+  }
+})
+
 export default function LandingPage() {
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [particles, setParticles] = useState<
-    Array<{
-      left: string
-      top: string
-      delay: string
-      duration: string
-      size: string
-      opacity: string
-    }>
-  >([])
 
   useEffect(() => {
-    setIsVisible(true)
-
-    // Generate premium particles with teal/cyan theme
-    const newParticles = [...Array(15)].map(() => ({
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 10}s`,
-      duration: `${20 + Math.random() * 30}s`,
-      size: `${2 + Math.random() * 4}px`,
-      opacity: `${0.2 + Math.random() * 0.4}`,
-    }))
-    setParticles(newParticles)
-
     // Mouse tracking for interactive effects
     const handleMouseMove = (e: globalThis.MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
@@ -73,7 +76,7 @@ export default function LandingPage() {
 
         {/* Floating Particles */}
         <div className="floating-particles">
-          {particles.map((particle, i) => (
+          {PARTICLES.map((particle, i) => (
             <div
               key={i}
               className="absolute rounded-full bg-gradient-to-r from-cyan-400/40 to-teal-400/40 animate-particle-float"
@@ -507,7 +510,7 @@ export default function LandingPage() {
             </h2>
 
             <p className="text-xl text-slate-800 max-w-3xl mx-auto font-medium leading-relaxed">
-              Join thousands of professionals who have accelerated their careers with NextLeap's intelligent
+              Join thousands of professionals who have accelerated their careers with NextLeap&apos;s intelligent
               recommendations and data-driven insights.
             </p>
 

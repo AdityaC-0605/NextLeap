@@ -443,8 +443,8 @@ export default function CareerForecasting() {
                         onChange={(e) => setEducation(e.target.value)}
                         className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-700/80 backdrop-blur-sm text-white"
                       >
-                        <option value="Bachelors">Bachelor's Degree</option>
-                        <option value="Masters">Master's Degree</option>
+                        <option value="Bachelors">Bachelor&apos;s Degree</option>
+                        <option value="Masters">Master&apos;s Degree</option>
                         <option value="PhD">PhD</option>
                       </select>
                     </div>
@@ -489,7 +489,7 @@ export default function CareerForecasting() {
               <TabsContent value="fresher" className="space-y-6">
                 <div className="text-center space-y-2 mb-6">
                   <h3 className="text-2xl font-semibold text-white">Fresh Graduate Career Forecast</h3>
-                  <p className="text-slate-400">Share your skills and we'll recommend the best career paths for you</p>
+                  <p className="text-slate-400">Share your skills and we&apos;ll recommend the best career paths for you</p>
                 </div>
 
                 <form onSubmit={handleFresherSubmit} className="space-y-6">

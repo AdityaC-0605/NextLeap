@@ -17,6 +17,8 @@ interface CompanyRecommendation {
   image_path: string
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || ""
+
 export default function CulturalMatch() {
   const { toast } = useToast()
   const [preferences, setPreferences] = useState("")
@@ -62,7 +64,7 @@ export default function CulturalMatch() {
     setLoading(true)
     setError("")
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/cultural-match`, {
+      const response = await fetch(`${API_BASE}/api/cultural-match`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ preferences, top_n: 5 }),
@@ -344,7 +346,7 @@ export default function CulturalMatch() {
               What kind of company culture are you looking for?
             </p>
             <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-              Describe your ideal work environment and we'll find companies that match your values and preferences.
+              Describe your ideal work environment and we&apos;ll find companies that match your values and preferences.
             </p>
           </div>
         </div>
