@@ -118,30 +118,33 @@ class CareerEnv(gym.Env):
         self.observation_space = spaces.Box(low=0, high=100, shape=(4,), dtype=np.float32)
         self.action_space = spaces.Discrete(data['next_role'].nunique())
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
         self.current_step = random.randint(0, self.max_steps)
         row = self.data.iloc[self.current_step]
-        return np.array([row['current_role'], row['years_experience'], row['education_level'], row['current_salary_LPA']], dtype=np.float32)
+        obs = np.array([row['current_role'], row['years_experience'], row['education_level'], row['current_salary_LPA']], dtype=np.float32)
+        return obs, {}
 
     def step(self, action):
         row = self.data.iloc[self.current_step]
         reward = 0
-        done = True
+        terminated = True
+        truncated = False
         if action == row['next_role']:
             increase = row['predicted_salary_LPA'] - row['current_salary_LPA']
             reward = increase if increase > 0 else 0
-        next_state = self.reset()
-        return next_state, reward, done, {}
+        next_state, info = self.reset()
+        return next_state, reward, terminated, truncated, info
 
 env = CareerEnv(career_df)
 q_table = np.zeros((career_df['current_role'].nunique(), env.action_space.n))
 alpha, gamma, epsilon = 0.1, 0.6, 0.1
 
 for _ in range(10000):
-    state = env.reset()
+    state, _ = env.reset()
     current_role = int(state[0])
     action = env.action_space.sample() if random.uniform(0, 1) < epsilon else np.argmax(q_table[current_role])
-    next_state, reward, _, _ = env.step(action)
+    next_state, reward, _, _, _ = env.step(action)
     next_role = int(next_state[0])
     q_table[current_role, action] = (1 - alpha) * q_table[current_role, action] + alpha * (reward + gamma * np.max(q_table[next_role]))
 
@@ -192,7 +195,7 @@ def get_career_recommendations(request: dict):
     if not valid_actions:
         return [{"message": "No suitable career transitions found."}]
 
-    top_roles = sorted(valid_actions, key=lambda x: x[1], reverse=True)[:2]
+    top_roles = sorted(valid_actions, key=lambda x: x[1], reverse=True)[:5]
     recommendations = []
     for action_idx, _ in top_roles:
         info = career_df[career_df['next_role'] == action_idx].iloc[0]
@@ -213,12 +216,13 @@ def get_fresher_recommendations(request: dict):
         raise HTTPException(status_code=400, detail="Skills are required")
 
     career_df['skill_match'] = career_df['skills_to_learn'].apply(lambda x: sum(skill in str(x).lower() for skill in skills))
-    recs = career_df[career_df['skill_match'] > 0].drop_duplicates('next_role').sort_values(by='skill_match', ascending=False).head(2)
+    recs = career_df[career_df['skill_match'] > 0].drop_duplicates('next_role').sort_values(by='skill_match', ascending=False).head(5)
 
     return [{
         "next_role": encoders['next_role'].inverse_transform([int(row['next_role'])])[0],
         "skills_to_learn": row['skills_to_learn'],
-        "predicted_salary": row['predicted_salary_LPA']
+        "predicted_salary": row['predicted_salary_LPA'],
+        "salary_increase": 0
     } for _, row in recs.iterrows()]
 
 @app.post("/api/cultural-match")

@@ -462,21 +462,82 @@ class ResumeParser:
         return categorized_skills
 
     def analyze_skill_match(self, candidate_skills, required_skills):
-        """Analyze how well the candidate's skills match the required skills"""
+        """Analyze how well the candidate's skills match the required skills.
+        
+        Uses word-boundary aware matching to avoid false positives from short
+        skill names (e.g. "r" should NOT match "RESTful APIs").
+        """
+        import re
+        
         # Flatten the categorized skills into a single list
         all_candidate_skills = []
         for skills in candidate_skills.values():
             all_candidate_skills.extend(skills)
         
-        candidate_skills_lower = {skill.lower() for skill in all_candidate_skills}
-        required_skills_lower = {skill.lower() for skill in required_skills}
+        # Normalize candidate skills for comparison
+        candidate_skills_lower = [skill.lower().strip() for skill in all_candidate_skills]
+        
+        def _skill_matches(candidate: str, required: str) -> bool:
+            """Check if a candidate skill meaningfully matches a required skill.
+            
+            Rules:
+            1. Exact match (case-insensitive)
+            2. Candidate is a substantial keyword found as a whole word in required
+               (must be >= 2 chars to avoid single-char false positives like "r", "c")
+            3. Required skill's core keywords match candidate
+            """
+            c = candidate.lower().strip()
+            r = required.lower().strip()
+            
+            # Exact match
+            if c == r:
+                return True
+            
+            # Skip single-character skills for substring matching (too noisy)
+            if len(c) <= 1:
+                return False
+            
+            # Check if candidate skill appears as a whole word in the required skill
+            # e.g. "react" matches "React.js or Angular" via word boundary
+            # Use word boundary but also allow dots/hyphens adjacent to the match
+            pattern = r'(?<![a-zA-Z])' + re.escape(c) + r'(?![a-zA-Z])'
+            if re.search(pattern, r):
+                return True
+            
+            # Check if required skill appears as a whole word in the candidate
+            if len(r) > 2:
+                pattern_rev = r'(?<![a-zA-Z])' + re.escape(r) + r'(?![a-zA-Z])'
+                if re.search(pattern_rev, c):
+                    return True
+            
+            # Tokenize required skill and check if candidate matches any token
+            # e.g. "Node.js or Django" -> ["node.js", "django"] 
+            # Then "flask" won't match but "django" will
+            separators = r'[,/|]|\bor\b|\band\b'
+            tokens = [t.strip().lower() for t in re.split(separators, r) if t.strip()]
+            for token in tokens:
+                # Clean token of parentheses/brackets
+                token_clean = re.sub(r'[()[\]]', '', token).strip()
+                if not token_clean or len(token_clean) <= 1:
+                    continue
+                # Check if candidate matches this individual token
+                if c == token_clean:
+                    return True
+                if len(c) >= 2:
+                    pat = r'(?<![a-zA-Z])' + re.escape(c) + r'(?![a-zA-Z])'
+                    if re.search(pat, token_clean):
+                        return True
+                    pat2 = r'(?<![a-zA-Z])' + re.escape(token_clean) + r'(?![a-zA-Z])'
+                    if re.search(pat2, c):
+                        return True
+            
+            return False
         
         matched_skills = []
         missing_skills = []
         
         for req_skill in required_skills:
-            if any(candidate.lower() in req_skill.lower() or req_skill.lower() in candidate.lower() 
-                  for candidate in all_candidate_skills):
+            if any(_skill_matches(candidate, req_skill) for candidate in all_candidate_skills):
                 matched_skills.append(req_skill)
             else:
                 missing_skills.append(req_skill)

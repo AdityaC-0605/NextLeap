@@ -33,6 +33,25 @@ class CulturalMatcher:
             logger.error(f"Failed to initialize cultural matcher: {e}")
             raise
 
+    def _find_company_image(self, company_name: str) -> str:
+        """Try to find a matching company logo in public/images/"""
+        images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public", "images")
+        if not os.path.isdir(images_dir):
+            return ""
+        
+        # Normalize company name for matching
+        name_lower = company_name.lower().replace(" ", "").replace(".", "").replace(",", "")
+        
+        try:
+            for filename in os.listdir(images_dir):
+                fname_lower = os.path.splitext(filename)[0].lower().replace(" ", "").replace(".", "").replace(",", "")
+                if name_lower in fname_lower or fname_lower in name_lower:
+                    return f"/images/{filename}"
+        except OSError:
+            pass
+        
+        return ""
+
     def get_company_recommendations(self, user_input: str, top_n: int = 5) -> List[Dict]:
         """
         Get company recommendations based on user input
@@ -56,12 +75,21 @@ class CulturalMatcher:
             recommendations = []
             for idx in top_indices:
                 company_data = self.data.iloc[idx]
+                company_name = company_data["Company Name"]
+                
+                # Use Description column for cleaner culture text, fallback to Text
+                culture_text = company_data.get("Description", "") or company_data.get("Text", "")
+                # Clean up whitespace
+                if isinstance(culture_text, str):
+                    culture_text = " ".join(culture_text.split())
+                
                 recommendations.append({
-                    "company_name": company_data["Company Name"],
+                    "company_name": company_name,
                     "similarity_score": float(similarity_scores[idx]),
-                    "culture_description": company_data["Text"],
-                    "location": company_data.get("Location", "Not specified"),
-                    "industry": company_data.get("Industry", "Not specified")
+                    "culture_description": culture_text,
+                    "location": company_data.get("Location", "Multiple Locations"),
+                    "industry": company_data.get("Industry", "Technology"),
+                    "image_path": self._find_company_image(company_name),
                 })
             
             return recommendations
