@@ -29,7 +29,7 @@ export default function RootLayout({
         <meta name="color-scheme" content="light dark" />
       </head>
       <body className="font-sans">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <Header />
           <main className="pt-16">{children}</main>
           <Footer />
