@@ -2,12 +2,16 @@
 
 import type React from "react"
 import { useState, useCallback, useRef, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Upload, FileText, Brain, Target, Zap, CheckCircle, AlertCircle, Star, ArrowRight, Award } from "lucide-react"
+import { AmbientParticles } from "@/components/ui/ambient-particles"
+import { Upload, FileText, Brain, Target, Zap, CheckCircle, AlertCircle, Star, ArrowRight, Award, TrendingUp, Users } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { API_BASE } from "@/lib/api-base"
+import { generateParticles } from "@/lib/particles"
 
 const ROLES = [
   "Software Developer / Engineer",
@@ -78,7 +82,10 @@ const ROLES = [
   "IT Consultant",
 ]
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || ""
+const PARTICLES = generateParticles(15, 2)
+
+// Max file size: 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 export default function SkillGapAnalyzer() {
   const { toast } = useToast()
@@ -88,37 +95,46 @@ export default function SkillGapAnalyzer() {
   const [role, setRole] = useState("")
   const [match, setMatch] = useState<any>(null)
   const [error, setError] = useState("")
-  const [showAIOptions, setShowAIOptions] = useState(false)
   const [aiAdvice, setAIAdvice] = useState<any>(null)
   const [finished, setFinished] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [particles, setParticles] = useState<Array<{ left: string; top: string; delay: string; duration: string }>>([])
-  const [isClient, setIsClient] = useState(false)
+  const resultsRef = useRef<HTMLDivElement>(null)
 
+  // Auto-scroll to match results when they appear
   useEffect(() => {
-    // Set client flag first
-    setIsClient(true)
-    // Generate particles only on client side to avoid hydration mismatch
-    const newParticles = [...Array(15)].map(() => ({
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 10}s`,
-      duration: `${10 + Math.random() * 20}s`,
-    }))
-    setParticles(newParticles)
-  }, [])
+    if (match && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [match])
 
-  // Utility function to convert plain text to HTML
-  const convertToHTML = (text: string) => {
-    const paragraphs = text?.split("\n\n")
-    const htmlParagraphs =
-      paragraphs &&
-      paragraphs.length &&
-      paragraphs.map((para) => `<p class="mb-4">${para.replace(/\n/g, "<br>")}</p>`).join("")
-    return htmlParagraphs
+  // Safely render AI advice text (no dangerouslySetInnerHTML)
+  const renderAdviceText = (text: string) => {
+    if (!text) return null
+    const paragraphs = text.split("\n\n")
+    return paragraphs.map((para, i) => {
+      const lines = para.split("\n")
+      return (
+        <p key={i} className="mb-3 text-slate-300 leading-relaxed">
+          {lines.map((line, j) => (
+            <span key={j}>
+              {line}
+              {j < lines.length - 1 && <br />}
+            </span>
+          ))}
+        </p>
+      )
+    })
   }
+
+  const validateFile = useCallback((f: File): boolean => {
+    if (f.size > MAX_FILE_SIZE) {
+      toast({ title: "File too large", description: "Maximum file size is 5MB", variant: "destructive" })
+      return false
+    }
+    return true
+  }, [toast])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -141,14 +157,19 @@ export default function SkillGapAnalyzer() {
         droppedFile.name.endsWith(".pdf") ||
         droppedFile.name.endsWith(".docx")
       ) {
-        setFile(droppedFile)
+        if (validateFile(droppedFile)) {
+          setFile(droppedFile)
+        }
       }
     }
-  }, [])
+  }, [validateFile])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
+      const selectedFile = e.target.files[0]
+      if (validateFile(selectedFile)) {
+        setFile(selectedFile)
+      }
     }
   }
 
@@ -160,7 +181,6 @@ export default function SkillGapAnalyzer() {
     setMatch(null)
     setSkills(null)
     setStep(1)
-    setShowAIOptions(false)
     setAIAdvice(null)
     setFinished(false)
     setIsAnalyzing(true)
@@ -192,7 +212,6 @@ export default function SkillGapAnalyzer() {
     e.preventDefault()
     setError("")
     setMatch(null)
-    setShowAIOptions(false)
     setAIAdvice(null)
     setFinished(false)
     setIsAnalyzing(true)
@@ -264,47 +283,32 @@ export default function SkillGapAnalyzer() {
     setRole("")
     setMatch(null)
     setError("")
-    setShowAIOptions(false)
     setAIAdvice(null)
     setFinished(false)
     setIsAnalyzing(false)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 relative overflow-hidden">
+    <div className="theme-surface min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="floating-particles">
-          {isClient &&
-            particles.map((particle, i) => (
-              <div
-                key={i}
-                className="absolute w-2 h-2 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-full opacity-20 animate-float"
-                style={{
-                  left: particle.left,
-                  top: particle.top,
-                  animationDelay: particle.delay,
-                  animationDuration: particle.duration,
-                }}
-              />
-            ))}
-        </div>
+        <AmbientParticles particles={PARTICLES} />
       </div>
 
-      <div className="max-w-6xl mx-auto p-6 space-y-6 relative z-10">
+      <div className="max-w-6xl mx-auto px-6 py-10 md:px-8 md:py-12 space-y-10 relative z-10">
         {/* Header */}
-        <div className="text-center space-y-4 mb-8 animate-fade-in-up">
-          <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
+        <div className="text-center space-y-4 mb-10 animate-fade-in-up">
+          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight leading-tight bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
             AI Skill Gap Analyzer
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
             Upload your resume and discover the skills you need to land your dream role with AI-powered analysis.
           </p>
         </div>
 
         {/* Step 1: Upload Resume */}
         {!skills && !isAnalyzing && (
-          <Card className="border-2 border-dashed border-slate-600 hover:border-teal-400 transition-colors duration-300 animate-fade-in-up bg-slate-800/90 backdrop-blur-sm">
+          <Card className="border-2 border-dashed border-slate-600 hover:border-teal-400 transition-colors duration-300 animate-fade-in-up premium-panel">
             <CardContent className="p-12">
               <form onSubmit={handleUpload}>
                 <div
@@ -318,7 +322,7 @@ export default function SkillGapAnalyzer() {
                     <Upload className="w-12 h-12 text-teal-400" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-semibold text-white mb-2">Upload Your Resume</h3>
+                    <h3 className="text-xl md:text-2xl font-semibold text-white tracking-tight mb-2">Upload Your Resume</h3>
                     <p className="text-slate-300 mb-6">
                       Drag and drop your PDF or DOCX resume here, or click to browse files
                     </p>
@@ -390,14 +394,14 @@ export default function SkillGapAnalyzer() {
 
         {/* Loading State */}
         {isAnalyzing && (
-          <Card className="border-0 shadow-lg animate-fade-in-up bg-slate-800/90 backdrop-blur-sm border border-slate-700">
+          <Card className="border-0 shadow-lg animate-fade-in-up premium-panel">
             <CardContent className="p-8">
               <div className="text-center space-y-6">
                 <div className="w-24 h-24 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto animate-pulse-gentle">
                   <Brain className="w-12 h-12 text-white animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-semibold text-white mb-2">Analyzing Your Skills</h3>
+                  <h3 className="text-xl md:text-2xl font-semibold text-white tracking-tight mb-2">Analyzing Your Skills</h3>
                   <p className="text-slate-300 mb-6">Our AI is processing your resume and analyzing skill gaps...</p>
                   <div className="max-w-md mx-auto">
                     <Progress value={75} className="h-3 mb-2" />
@@ -413,7 +417,7 @@ export default function SkillGapAnalyzer() {
         {skills && step === 1 && (
           <div className="space-y-6 animate-fade-in-up">
             <div className="flex justify-between items-center">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
                 Extracted Skills
               </h2>
               <Button
@@ -430,7 +434,7 @@ export default function SkillGapAnalyzer() {
               {Object.entries(skills).map(([category, skillList], index) => (
                 <Card
                   key={category}
-                  className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-slide-in-up bg-slate-800/90 backdrop-blur-sm border border-slate-700"
+                  className="border-0 shadow-lg hover-lift animate-slide-in-up premium-panel"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <CardHeader>
@@ -473,9 +477,9 @@ export default function SkillGapAnalyzer() {
         {/* Step 2: Role Selection and Analysis */}
         {step === 2 && (
           <div className="space-y-6 animate-fade-in-up">
-            <Card className="border-0 shadow-lg bg-gradient-to-r from-slate-800/90 to-slate-700/90 border border-slate-600">
+            <Card className="border-0 shadow-lg premium-panel">
               <CardHeader>
-                <CardTitle className="flex items-center text-2xl text-white">
+                <CardTitle className="flex items-center text-xl md:text-2xl tracking-tight text-white">
                   <Target className="w-6 h-6 mr-3 text-teal-400" />
                   Select Your Target Role
                 </CardTitle>
@@ -488,7 +492,7 @@ export default function SkillGapAnalyzer() {
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full p-4 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                    className="field-select"
                     required
                   >
                     <option value="">Select a role...</option>
@@ -530,10 +534,55 @@ export default function SkillGapAnalyzer() {
 
             {/* Match Results */}
             {match && (
-              <div className="space-y-6 animate-slide-in-up">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent text-center">
+              <div ref={resultsRef} className="space-y-6 animate-slide-in-up">
+                <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent text-center">
                   Skill Match Analysis for {role}
                 </h2>
+
+                {/* Match Percentage Visualization */}
+                {typeof match.match_percentage === "number" && (
+                  <div className="flex justify-center animate-fade-in-up">
+                    <Card className="border-0 shadow-lg premium-panel px-8 py-6">
+                      <div className="flex items-center gap-8">
+                        <div className="relative w-28 h-28">
+                          <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="52" stroke="currentColor" strokeWidth="10" fill="none" className="text-slate-700" />
+                            <circle
+                              cx="60" cy="60" r="52"
+                              stroke="url(#matchGradient)" strokeWidth="10" fill="none"
+                              strokeLinecap="round"
+                              strokeDasharray={`${(match.match_percentage / 100) * 2 * Math.PI * 52} ${2 * Math.PI * 52}`}
+                              className="transition-all duration-1000 ease-out"
+                            />
+                            <defs>
+                              <linearGradient id="matchGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#14b8a6" />
+                                <stop offset="100%" stopColor="#06b6d4" />
+                              </linearGradient>
+                            </defs>
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-2xl font-bold text-white">{match.match_percentage.toFixed(0)}%</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-lg font-semibold text-white">Overall Match</p>
+                          <p className="text-sm text-slate-400">
+                            {match.matched_skills.length} of {match.matched_skills.length + match.missing_skills.length} required skills
+                          </p>
+                          <Badge className={`mt-1 ${match.match_percentage >= 75
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500"
+                            : match.match_percentage >= 50
+                              ? "bg-amber-500/20 text-amber-300 border-amber-500"
+                              : "bg-red-500/20 text-red-300 border-red-500"
+                            }`}>
+                            {match.match_percentage >= 75 ? "Strong Match" : match.match_percentage >= 50 ? "Moderate Match" : "Needs Development"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                )}
 
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Matched Skills */}
@@ -591,26 +640,36 @@ export default function SkillGapAnalyzer() {
                   </Card>
                 </div>
 
-                {/* AI Recommendations Section */}
-                {!showAIOptions && !aiAdvice && !finished && (
-                  <Card className="border-0 shadow-lg bg-gradient-to-r from-slate-800/90 to-slate-700/90 animate-fade-in-up border border-slate-600">
+                {/* AI Recommendations — Single-step flow */}
+                {!aiAdvice && !finished && (
+                  <Card className="border-0 shadow-lg premium-panel animate-fade-in-up">
                     <CardContent className="p-8 text-center">
                       <div className="space-y-4">
                         <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto">
                           <Brain className="w-8 h-8 text-white" />
                         </div>
-                        <h3 className="text-2xl font-semibold text-white">Get AI-Powered Learning Recommendations</h3>
-                        <p className="text-slate-300 max-w-2xl mx-auto">
+                        <h3 className="text-xl md:text-2xl font-semibold text-white tracking-tight">Get AI-Powered Learning Recommendations</h3>
+                        <p className="text-slate-300 max-w-xl mx-auto leading-relaxed">
                           Our AI can provide personalized learning paths and resources to help you acquire the missing
                           skills for your target role.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                           <Button
-                            onClick={() => setShowAIOptions(true)}
+                            onClick={handleGetAIAdvice}
+                            disabled={isAnalyzing}
                             className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-3 hover:scale-105 transition-transform"
                           >
-                            <Brain className="w-5 h-5 mr-2" />
-                            Yes, Get AI Recommendations
+                            {isAnalyzing ? (
+                              <>
+                                <Brain className="w-5 h-5 mr-2 animate-pulse" />
+                                Generating Recommendations...
+                              </>
+                            ) : (
+                              <>
+                                <Brain className="w-5 h-5 mr-2" />
+                                Get AI Recommendations
+                              </>
+                            )}
                           </Button>
                           <Button
                             onClick={() => setFinished(true)}
@@ -625,34 +684,10 @@ export default function SkillGapAnalyzer() {
                   </Card>
                 )}
 
-                {showAIOptions && !aiAdvice && (
-                  <Card className="border-0 shadow-lg animate-fade-in-up bg-slate-800/90 backdrop-blur-sm border border-slate-700">
-                    <CardContent className="p-8 text-center">
-                      <Button
-                        onClick={handleGetAIAdvice}
-                        className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-3 hover:scale-105 transition-transform"
-                        disabled={isAnalyzing}
-                      >
-                        {isAnalyzing ? (
-                          <>
-                            <Brain className="w-5 h-5 mr-2 animate-pulse" />
-                            Generating Recommendations...
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="w-5 h-5 mr-2" />
-                            Get AI Recommendations
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-
                 {/* AI Advice Results */}
                 {aiAdvice && (
                   <div className="space-y-6 animate-fade-in-up">
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent text-center">
+                    <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent text-center">
                       AI Learning Recommendations
                     </h2>
 
@@ -660,7 +695,7 @@ export default function SkillGapAnalyzer() {
                       {Object.entries(aiAdvice).map(([skill, advice], index) => (
                         <Card
                           key={skill}
-                          className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 animate-slide-in-up bg-slate-800/90 backdrop-blur-sm border border-slate-700"
+                          className="border-0 shadow-lg hover-lift animate-slide-in-up premium-panel"
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <CardHeader>
@@ -672,17 +707,37 @@ export default function SkillGapAnalyzer() {
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div
-                              className="prose prose-base max-w-none text-slate-300"
-                              style={{ lineHeight: "1.6" }}
-                              dangerouslySetInnerHTML={{
-                                __html: String(convertToHTML(advice as string)),
-                              }}
-                            />
+                            <div className="prose prose-base max-w-none" style={{ lineHeight: "1.6" }}>
+                              {renderAdviceText(advice as string)}
+                            </div>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
+
+                    {/* Cross-feature navigation */}
+                    <Card className="border-0 shadow-lg premium-panel animate-fade-in-up">
+                      <CardContent className="p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4 text-center">Continue Your Career Journey</h3>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                          <Link href="/career-forecasting">
+                            <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-6 py-3 hover:scale-105 transition-transform">
+                              <TrendingUp className="w-4 h-4 mr-2" />
+                              Get Career Forecast
+                            </Button>
+                          </Link>
+                          <Link href="/cultural-match">
+                            <Button
+                              variant="outline"
+                              className="px-6 py-3 border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent hover:scale-105 transition-transform"
+                            >
+                              <Users className="w-4 h-4 mr-2" />
+                              Find Cultural Matches
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
 
@@ -693,17 +748,28 @@ export default function SkillGapAnalyzer() {
                         <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto">
                           <CheckCircle className="w-8 h-8 text-white" />
                         </div>
-                        <h3 className="text-2xl font-semibold text-teal-300">Analysis Complete!</h3>
+                        <h3 className="text-xl md:text-2xl font-semibold tracking-tight text-teal-300">Analysis Complete!</h3>
                         <p className="text-slate-300">
                           Thank you for using the AI Skill Gap Analyzer. Good luck with your career journey!
                         </p>
-                        <Button
-                          onClick={resetAnalysis}
-                          className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-3 hover:scale-105 transition-transform"
-                        >
-                          <Upload className="w-5 h-5 mr-2" />
-                          Analyze Another Resume
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                          <Button
+                            onClick={resetAnalysis}
+                            className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-3 hover:scale-105 transition-transform"
+                          >
+                            <Upload className="w-5 h-5 mr-2" />
+                            Analyze Another Resume
+                          </Button>
+                          <Link href="/career-forecasting">
+                            <Button
+                              variant="outline"
+                              className="px-8 py-3 border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent hover:scale-105 transition-transform"
+                            >
+                              <TrendingUp className="w-5 h-5 mr-2" />
+                              Try Career Forecasting
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -713,99 +779,6 @@ export default function SkillGapAnalyzer() {
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes pulseGentle {
-          0%,
-          100% {
-            opacity: 0.8;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.05);
-          }
-        }
-        @keyframes bounceGentle {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-5px);
-          }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 1s ease-out;
-        }
-        .animate-slide-in-left {
-          animation: slideInLeft 0.8s ease-out;
-        }
-        .animate-slide-in-right {
-          animation: slideInRight 0.8s ease-out;
-        }
-        .animate-slide-in-up {
-          animation: slideInUp 0.8s ease-out;
-        }
-        .animate-pulse-gentle {
-          animation: pulseGentle 3s ease-in-out infinite;
-        }
-        .animate-bounce-gentle {
-          animation: bounceGentle 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   )
 }

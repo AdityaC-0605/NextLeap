@@ -1,11 +1,13 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AmbientParticles } from "@/components/ui/ambient-particles"
 import {
   Brain,
   TrendingUp,
@@ -23,6 +25,7 @@ import {
 } from "lucide-react"
 import { getCareerRecommendations, getFresherRecommendations } from "@/lib/career-model"
 import { useToast } from "@/hooks/use-toast"
+import { generateParticles } from "@/lib/particles"
 
 interface Recommendation {
   next_role: string
@@ -34,13 +37,14 @@ interface Recommendation {
   }
 }
 
+const PARTICLES = generateParticles(15, 1)
+
 export default function CareerForecasting() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [error, setError] = useState("")
   const [activeTab, setActiveTab] = useState("experienced")
-  const [particles, setParticles] = useState<Array<{ left: string; top: string; delay: string; duration: string }>>([])
 
   // Experienced form state
   const [currentRole, setCurrentRole] = useState("")
@@ -52,6 +56,14 @@ export default function CareerForecasting() {
   const [skills, setSkills] = useState("")
 
   const showOutput = recommendations.length > 0
+  const resultsRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to results when they load
+  useEffect(() => {
+    if (showOutput && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [showOutput])
 
   const handleExperiencedSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,45 +113,21 @@ export default function CareerForecasting() {
     setSkills("")
   }
 
-  useEffect(() => {
-    // Generate particles only on client side to avoid hydration mismatch
-    const newParticles = [...Array(15)].map(() => ({
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 10}s`,
-      duration: `${10 + Math.random() * 20}s`,
-    }))
-    setParticles(newParticles)
-  }, [])
-
   if (showOutput) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 relative overflow-hidden">
+      <div className="theme-surface min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="floating-particles">
-            {particles.map((particle, i) => (
-              <div
-                key={i}
-                className="absolute w-2 h-2 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-full opacity-20 animate-float"
-                style={{
-                  left: particle.left,
-                  top: particle.top,
-                  animationDelay: particle.delay,
-                  animationDuration: particle.duration,
-                }}
-              />
-            ))}
-          </div>
+          <AmbientParticles particles={PARTICLES} />
         </div>
 
-        <div className="max-w-6xl mx-auto p-6 space-y-6 relative z-10">
+        <div ref={resultsRef} className="max-w-6xl mx-auto px-6 py-10 md:px-8 md:py-12 space-y-10 relative z-10">
           {/* Header */}
-          <div className="text-center space-y-4 mb-8 animate-fade-in-up">
-            <h2 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
+          <div className="text-center space-y-4 mb-10 animate-fade-in-up">
+            <h2 className="text-3xl lg:text-4xl font-bold tracking-tight leading-tight bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
               Your Career Forecast
             </h2>
-            <p className="text-xl text-slate-300 max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
               AI-powered recommendations tailored to your profile
             </p>
           </div>
@@ -161,7 +149,7 @@ export default function CareerForecasting() {
             {recommendations.map((rec, index) => (
               <Card
                 key={index}
-                className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] animate-slide-in-up bg-slate-800/90 backdrop-blur-sm border border-slate-700"
+                className="border-0 shadow-lg hover-lift animate-slide-in-up premium-panel"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <CardHeader>
@@ -193,13 +181,17 @@ export default function CareerForecasting() {
                           </div>
                           <div>
                             <p className="text-sm text-slate-300">Predicted Salary</p>
-                            <p className="text-xl font-bold text-white">₹{rec.predicted_salary.toFixed(2)} LPA</p>
+                            <p className="text-xl font-bold text-white">
+                              {typeof rec.predicted_salary === "number" && !isNaN(rec.predicted_salary)
+                                ? `₹${rec.predicted_salary.toFixed(2)} LPA`
+                                : "Data unavailable"}
+                            </p>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    {typeof rec.salary_increase === "number" && !isNaN(rec.salary_increase) && (
+                    {typeof rec.salary_increase === "number" && !isNaN(rec.salary_increase) && rec.salary_increase > 0 && (
                       <Card className="bg-gradient-to-r from-slate-700 to-slate-600 border-cyan-500/50">
                         <CardContent className="p-4">
                           <div className="flex items-center space-x-3">
@@ -208,7 +200,7 @@ export default function CareerForecasting() {
                             </div>
                             <div>
                               <p className="text-sm text-slate-300">Salary Increase</p>
-                              <p className="text-xl font-bold text-white">₹{rec.salary_increase.toFixed(2)} LPA</p>
+                              <p className="text-xl font-bold text-white">+₹{rec.salary_increase.toFixed(2)} LPA</p>
                             </div>
                           </div>
                         </CardContent>
@@ -238,17 +230,21 @@ export default function CareerForecasting() {
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-700">
-                    <Button className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white">
-                      <Award className="w-4 h-4 mr-2" />
-                      Start Learning Path
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      Find Companies
-                    </Button>
+                    <Link href="/skill-gap" className="flex-1">
+                      <Button className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white hover:scale-105 transition-transform">
+                        <Award className="w-4 h-4 mr-2" />
+                        Start Learning Path
+                      </Button>
+                    </Link>
+                    <Link href="/cultural-match" className="flex-1">
+                      <Button
+                        variant="outline"
+                        className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent hover:scale-105 transition-transform"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Find Companies
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
@@ -256,124 +252,62 @@ export default function CareerForecasting() {
           </div>
 
           {/* Summary Card */}
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-slate-800/90 to-slate-700/90 animate-fade-in-up border border-slate-600">
+          <Card className="border-0 shadow-lg premium-panel animate-fade-in-up">
             <CardContent className="p-8 text-center">
               <div className="space-y-4">
                 <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto">
                   <Brain className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-semibold text-white">Ready to Take the Next Step?</h3>
-                <p className="text-slate-300 max-w-2xl mx-auto">
+                <h3 className="text-xl md:text-2xl font-semibold text-white tracking-tight">Ready to Take the Next Step?</h3>
+                <p className="text-slate-300 max-w-xl mx-auto leading-relaxed">
                   These recommendations are based on current market trends and your profile. Start building the skills
                   you need to advance your career.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                  <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-3">
-                    <Target className="w-4 h-4 mr-2" />
-                    Create Learning Plan
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="px-8 py-3 border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
-                  >
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    Track Progress
-                  </Button>
+                  <Link href="/skill-gap">
+                    <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-3 hover:scale-105 transition-transform">
+                      <Target className="w-4 h-4 mr-2" />
+                      Analyze Your Skills
+                    </Button>
+                  </Link>
+                  <Link href="/cultural-match">
+                    <Button
+                      variant="outline"
+                      className="px-8 py-3 border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent hover:scale-105 transition-transform"
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Find Cultural Matches
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        <style jsx>{`
-          @keyframes float {
-            0%,
-            100% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-20px);
-            }
-          }
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          @keyframes slideInUp {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          @keyframes bounceGentle {
-            0%,
-            100% {
-              transform: translateY(0);
-            }
-            50% {
-              transform: translateY(-5px);
-            }
-          }
-          .animate-float {
-            animation: float 6s ease-in-out infinite;
-          }
-          .animate-fade-in-up {
-            animation: fadeInUp 1s ease-out;
-          }
-          .animate-slide-in-up {
-            animation: slideInUp 0.8s ease-out;
-          }
-          .animate-bounce-gentle {
-            animation: bounceGentle 2s ease-in-out infinite;
-          }
-        `}</style>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 relative overflow-hidden">
+    <div className="theme-surface min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="floating-particles">
-          {particles.map((particle, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-full opacity-20 animate-float"
-              style={{
-                left: particle.left,
-                top: particle.top,
-                animationDelay: particle.delay,
-                animationDuration: particle.duration,
-              }}
-            />
-          ))}
-        </div>
+        <AmbientParticles particles={PARTICLES} />
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 space-y-6 relative z-10">
+      <div className="max-w-4xl mx-auto px-6 py-10 md:px-8 md:py-12 space-y-10 relative z-10">
         {/* Header */}
-        <div className="text-center space-y-4 mb-8 animate-fade-in-up">
-          <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
+        <div className="text-center space-y-4 mb-10 animate-fade-in-up">
+          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight leading-tight bg-gradient-to-r from-white via-teal-200 to-cyan-300 bg-clip-text text-transparent">
             Career Forecasting
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
             Get AI-powered career recommendations based on your experience and skills
           </p>
         </div>
 
         {/* Main Form Card */}
-        <Card className="border-0 shadow-xl bg-slate-800/90 backdrop-blur-sm animate-fade-in-up border border-slate-700">
+        <Card className="border-0 shadow-xl premium-panel animate-fade-in-up">
           <CardContent className="p-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-2 bg-slate-700 rounded-lg p-1">
@@ -396,7 +330,7 @@ export default function CareerForecasting() {
               {/* Experienced Form */}
               <TabsContent value="experienced" className="space-y-6">
                 <div className="text-center space-y-2 mb-6">
-                  <h3 className="text-2xl font-semibold text-white">Professional Career Forecast</h3>
+                  <h3 className="text-xl md:text-2xl font-semibold text-white tracking-tight">Professional Career Forecast</h3>
                   <p className="text-slate-400">
                     Tell us about your current role and experience to get personalized recommendations
                   </p>
@@ -405,7 +339,7 @@ export default function CareerForecasting() {
                 <form onSubmit={handleExperiencedSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-slate-300">
+                      <label className="field-label">
                         <Briefcase className="w-4 h-4 inline mr-2" />
                         Current Role
                       </label>
@@ -413,13 +347,13 @@ export default function CareerForecasting() {
                         type="text"
                         value={currentRole}
                         onChange={(e) => setCurrentRole(e.target.value)}
-                        className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-700/80 backdrop-blur-sm text-white placeholder-slate-400"
+                        className="field-input"
                         required
                         placeholder="e.g., Software Developer"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-slate-300">
+                      <label className="field-label">
                         <TrendingUp className="w-4 h-4 inline mr-2" />
                         Years of Experience
                       </label>
@@ -427,21 +361,21 @@ export default function CareerForecasting() {
                         type="number"
                         value={yearsExperience}
                         onChange={(e) => setYearsExperience(e.target.value)}
-                        className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-700/80 backdrop-blur-sm text-white placeholder-slate-400"
+                        className="field-input"
                         required
                         min={0}
                         placeholder="e.g., 3"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-slate-300">
+                      <label className="field-label">
                         <GraduationCap className="w-4 h-4 inline mr-2" />
                         Education Level
                       </label>
                       <select
                         value={education}
                         onChange={(e) => setEducation(e.target.value)}
-                        className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-700/80 backdrop-blur-sm text-white"
+                        className="field-select"
                       >
                         <option value="Bachelors">Bachelor&apos;s Degree</option>
                         <option value="Masters">Master&apos;s Degree</option>
@@ -449,7 +383,7 @@ export default function CareerForecasting() {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-slate-300">
+                      <label className="field-label">
                         <DollarSign className="w-4 h-4 inline mr-2" />
                         Current Salary (LPA)
                       </label>
@@ -457,7 +391,7 @@ export default function CareerForecasting() {
                         type="number"
                         value={currentSalary}
                         onChange={(e) => setCurrentSalary(e.target.value)}
-                        className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-700/80 backdrop-blur-sm text-white placeholder-slate-400"
+                        className="field-input"
                         required
                         min={0}
                         placeholder="e.g., 12"
@@ -488,20 +422,20 @@ export default function CareerForecasting() {
               {/* Fresher Form */}
               <TabsContent value="fresher" className="space-y-6">
                 <div className="text-center space-y-2 mb-6">
-                  <h3 className="text-2xl font-semibold text-white">Fresh Graduate Career Forecast</h3>
+                  <h3 className="text-xl md:text-2xl font-semibold text-white tracking-tight">Fresh Graduate Career Forecast</h3>
                   <p className="text-slate-400">Share your skills and we&apos;ll recommend the best career paths for you</p>
                 </div>
 
                 <form onSubmit={handleFresherSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-300">
+                    <label className="field-label">
                       <Zap className="w-4 h-4 inline mr-2" />
                       Your Skills (comma-separated)
                     </label>
                     <textarea
                       value={skills}
                       onChange={(e) => setSkills(e.target.value)}
-                      className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all bg-slate-700/80 backdrop-blur-sm text-white placeholder-slate-400"
+                      className="field-textarea"
                       rows={6}
                       placeholder="e.g., Python, JavaScript, React, SQL, Machine Learning, Data Analysis"
                       required
@@ -546,7 +480,7 @@ export default function CareerForecasting() {
         </Card>
 
         {/* Features Preview */}
-        <div className="grid md:grid-cols-3 gap-6 mt-8">
+        <div className="grid md:grid-cols-3 gap-6 mt-10">
           {[
             {
               icon: Brain,
@@ -569,7 +503,7 @@ export default function CareerForecasting() {
           ].map((feature, index) => (
             <Card
               key={index}
-              className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-slide-in-up bg-slate-800/80 backdrop-blur-sm border border-slate-700"
+              className="border-0 shadow-lg hover-lift animate-slide-in-up premium-panel"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardContent className="p-6 text-center">
@@ -583,59 +517,6 @@ export default function CareerForecasting() {
           ))}
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes bounceGentle {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-5px);
-          }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 1s ease-out;
-        }
-        .animate-slide-in-up {
-          animation: slideInUp 0.8s ease-out;
-        }
-        .animate-bounce-gentle {
-          animation: bounceGentle 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   )
 }

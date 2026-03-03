@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Reveal } from "@/components/ui/reveal"
+import { AmbientParticles } from "@/components/ui/ambient-particles"
 import {
   ArrowRight,
   Brain,
@@ -26,32 +28,9 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { generateParticles } from "@/lib/particles"
 
-type Particle = {
-  left: string
-  top: string
-  delay: string
-  duration: string
-  size: string
-  opacity: string
-}
-
-function seeded01(seed: number) {
-  const x = Math.sin(seed * 12.9898) * 43758.5453
-  return x - Math.floor(x)
-}
-
-const PARTICLES: Particle[] = Array.from({ length: 15 }, (_, i) => {
-  const seed = i + 1
-  return {
-    left: `${(seeded01(seed * 2) * 100).toFixed(6)}%`,
-    top: `${(seeded01(seed * 3) * 100).toFixed(6)}%`,
-    delay: `${(seeded01(seed * 5) * 10).toFixed(6)}s`,
-    duration: `${(20 + seeded01(seed * 7) * 30).toFixed(6)}s`,
-    size: `${(2 + seeded01(seed * 11) * 4).toFixed(6)}px`,
-    opacity: `${(0.2 + seeded01(seed * 13) * 0.4).toFixed(6)}`,
-  }
-})
+const PARTICLES = generateParticles(15, 11, true)
 
 export default function LandingPage() {
   const [isVisible] = useState(true)
@@ -68,30 +47,17 @@ export default function LandingPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-teal-800 relative overflow-hidden">
+    <div className="theme-surface min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-teal-800 relative overflow-hidden">
       {/* Premium Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Gradient Mesh */}
         <div className="absolute inset-0 bg-gradient-to-br from-teal-900/20 via-transparent to-cyan-900/20" />
 
         {/* Floating Particles */}
-        <div className="floating-particles">
-          {PARTICLES.map((particle, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-gradient-to-r from-cyan-400/40 to-teal-400/40 animate-particle-float"
-              style={{
-                left: particle.left,
-                top: particle.top,
-                width: particle.size,
-                height: particle.size,
-                opacity: particle.opacity,
-                animationDelay: particle.delay,
-                animationDuration: particle.duration,
-              }}
-            />
-          ))}
-        </div>
+        <AmbientParticles
+          particles={PARTICLES}
+          particleClassName="absolute rounded-full bg-gradient-to-r from-cyan-400/40 to-teal-400/40 animate-particle-float"
+        />
 
         {/* Interactive Light Effect */}
         <div
@@ -109,9 +75,7 @@ export default function LandingPage() {
       <section className="relative py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div
-              className={`space-y-10 transition-all duration-1000 ${isVisible ? "animate-fade-in-scale" : "opacity-0"}`}
-            >
+            <Reveal className={`space-y-10 transition-all duration-1000 ${isVisible ? "animate-fade-in-scale" : "opacity-0"}`}>
               <div className="space-y-8">
                 <Badge className="bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-300 hover:from-teal-500/30 hover:to-cyan-500/30 transition-all duration-300 border border-teal-400/30 font-semibold px-4 py-2 text-sm shadow-sm animate-shimmer">
                   <Sparkles className="w-4 h-4 mr-2" />
@@ -170,12 +134,10 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Reveal>
 
             {/* Premium Hero Card */}
-            <div
-              className={`relative transition-all duration-1000 delay-300 ${isVisible ? "animate-fade-in-scale" : "opacity-0"}`}
-            >
+            <Reveal delayMs={140} className={`relative transition-all duration-1000 delay-300 ${isVisible ? "animate-fade-in-scale" : "opacity-0"}`}>
               <div className="glass-card-dark rounded-3xl p-8 shadow-premium-lg hover:shadow-glow-teal transition-all duration-500 animate-float-soft border border-teal-400/20">
                 <div className="space-y-6">
                   <div className="flex items-center space-x-4">
@@ -222,13 +184,15 @@ export default function LandingPage() {
                     ))}
                   </div>
 
-                  <Button className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-slate-900 font-bold transition-all duration-200 animate-button-press">
-                    <Play className="w-4 h-4 mr-2" />
-                    View Full Analysis
-                  </Button>
+                  <Link href="/skill-gap">
+                    <Button className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-slate-900 font-bold transition-all duration-200 animate-button-press">
+                      <Play className="w-4 h-4 mr-2" />
+                      View Full Analysis
+                    </Button>
+                  </Link>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -236,7 +200,7 @@ export default function LandingPage() {
       {/* Premium Features Section */}
       <section id="features" className="py-20 bg-gradient-to-b from-slate-800/50 to-slate-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-6 mb-16 animate-fade-in-scale">
+          <Reveal className="text-center space-y-6 mb-16 animate-fade-in-scale">
             <Badge className="bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-300 border-teal-400/30 font-semibold px-4 py-2">
               <BarChart3 className="w-4 h-4 mr-2" />
               Intelligent Platform
@@ -248,7 +212,7 @@ export default function LandingPage() {
               Powered by advanced AI, machine learning, and natural language processing to deliver unprecedented career
               insights and recommendations.
             </p>
-          </div>
+          </Reveal>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
@@ -503,7 +467,7 @@ export default function LandingPage() {
         />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="space-y-8 animate-fade-in-scale">
+          <Reveal className="space-y-8 animate-fade-in-scale">
 
             <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight">
               Ready to Transform Your Career?
@@ -525,14 +489,16 @@ export default function LandingPage() {
                 </Button>
               </Link>
 
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-slate-800/30 text-slate-900 hover:bg-slate-900/10 px-10 py-4 text-lg font-bold backdrop-blur-sm transition-all duration-300 animate-button-press"
-              >
-                <Play className="w-5 h-5 mr-2" />
-                Watch Demo
-              </Button>
+              <Link href="#features">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-slate-800/30 text-slate-900 hover:bg-slate-900/10 px-10 py-4 text-lg font-bold backdrop-blur-sm transition-all duration-300 animate-button-press"
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  Explore Features
+                </Button>
+              </Link>
             </div>
 
             <div className="flex items-center justify-center space-x-8 text-slate-800 text-sm font-medium">
@@ -549,7 +515,7 @@ export default function LandingPage() {
                 <span>No credit card required</span>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
