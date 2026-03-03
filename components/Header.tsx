@@ -18,15 +18,15 @@ export function Header() {
   const [open, setOpen] = useState(false)
 
   return (
-    <header className="glass-nav-dark sticky top-0 z-50 transition-all duration-300">
+    <header className="glass-nav-dark sticky top-0 z-50 transition-all duration-300 shadow-premium">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand */}
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg animate-glow-teal">
+          <Link href="/" className="flex items-center space-x-3 hover-lift">
+            <div className="w-9 h-9 bg-gradient-to-br from-cyan-300 via-teal-300 to-emerald-300 rounded-xl flex items-center justify-center shadow-lg animate-glow-teal">
               <Brain className="w-5 h-5 text-slate-900" />
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-white to-teal-100 bg-clip-text text-transparent">
+            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-cyan-100 to-teal-100 bg-clip-text text-transparent">
               NextLeap
             </span>
           </Link>
@@ -53,7 +53,7 @@ export function Header() {
               <Button
                 variant="outline"
                 size="sm"
-                className="glass-card-dark border-teal-400/30 hover:border-teal-400 hover:bg-teal-400/10 text-teal-400 transition-all duration-200 font-medium"
+                className="glass-card-dark border-teal-400/30 hover:border-teal-300 hover:bg-teal-300/10 text-teal-300 transition-all duration-200 font-medium"
               >
                 Get Started
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -73,7 +73,7 @@ export function Header() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-slate-800">
+        <div className="md:hidden border-t border-slate-800/80 stagger-reveal" style={{ "--delay": "60ms" } as Record<string, string>}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-2">
             {NAV_ITEMS.map((item) => (
               <Link
@@ -98,5 +98,3 @@ export function Header() {
 }
 
 export default Header
-
-

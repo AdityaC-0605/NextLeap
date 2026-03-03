@@ -1,7 +1,6 @@
 // lib/career-model.ts
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") || "";
+import { API_BASE } from "@/lib/api-base";
 
 export interface CareerRecommendation {
   next_role: string;
@@ -19,7 +18,7 @@ export interface CareerRequest {
 
 export async function getCareerRecommendations(request: CareerRequest): Promise<CareerRecommendation[]> {
   // Route through Next.js API to avoid CORS and environment differences
-  const response = await fetch(`${API_URL}/api/career-recommendations`, {
+  const response = await fetch(`${API_BASE}/api/career-recommendations`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -36,7 +35,7 @@ export async function getCareerRecommendations(request: CareerRequest): Promise<
 }
 
 export async function getFresherRecommendations(skills: string[]): Promise<CareerRecommendation[]> {
-  const response = await fetch(`${API_URL}/api/fresher-recommendations`, {
+  const response = await fetch(`${API_BASE}/api/fresher-recommendations`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
