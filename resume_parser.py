@@ -640,7 +640,11 @@ def main():
     print("Initializing Gemini AI for skills advice...")
     try:
         from gemini_integration import GeminiSkillsAdvisor
-        gemini_advisor = GeminiSkillsAdvisor(api_key="AIzaSyB11Wc2pqZZsqglvh63R56m9ezYaB5tF3U")  # Will use environment variable GEMINI_API_KEY
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            print("Warning: GEMINI_API_KEY environment variable not set.")
+        
+        gemini_advisor = GeminiSkillsAdvisor(api_key=api_key)
         gemini_enabled = True
     except Exception as e:
         print(f"Could not initialize Gemini AI: {str(e)}")
