@@ -4,6 +4,7 @@
   <img src="https://img.shields.io/badge/Gemini_AI-2.0_Flash-4285F4?style=for-the-badge&logo=google" alt="Gemini AI" />
   <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/GSAP-3.12-88CE02?style=for-the-badge&logo=greensock&logoColor=white" alt="GSAP" />
 </p>
 
 # 🚀 NextLeap — AI-Powered Career Intelligence Platform
@@ -32,10 +33,16 @@
 - TF-IDF vectorization + cosine similarity matches your preferences against a database of 200+ companies.
 - Results include company name, industry, location, culture highlights, match score, and direct links to learn more or apply.
 
-### 🎨 Premium UI/UX
+### 🎨 Immersive 3D UI/UX
+- **Cinematic scroll experience** powered by GSAP ScrollTrigger — sections reveal with 3D perspective transforms as you scroll.
+- **Interactive 3D tilt cards** — feature and tool cards rotate in 3D following your cursor with realistic glare reflections.
+- **Parallax depth layers** — floating gradient orbs and decorative elements move at different scroll speeds, creating a true depth illusion.
+- **Magnetic buttons** — CTA buttons subtly attract toward your cursor for an alive, interactive feel.
+- **Scroll progress indicator** — a glowing gradient bar at the top tracks reading progress.
+- **GPU-accelerated animations** — all transforms are hardware-accelerated for smooth 60fps performance.
 - Dark-themed glassmorphism design with ambient floating particles and smooth micro-animations.
 - Fully responsive layout optimized for desktop and mobile.
-- Interactive elements with hover effects, gradient accents, and animated transitions.
+- Respects `prefers-reduced-motion` for accessibility.
 
 ---
 
@@ -52,6 +59,9 @@
 │  │   Cultural Match      │  │   Shared UI Components     │  │
 │  └───────────────────────┘  │   (Header, Footer, etc.)   │  │
 │                              └────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  3D Motion Layer (GSAP ScrollTrigger, Tilt, Parallax)  │ │
+│  └─────────────────────────────────────────────────────────┘ │
 └────────────────────────┬────────────────────────────────────┘
                          │ REST API (fetch)
 ┌────────────────────────▼────────────────────────────────────┐
@@ -77,6 +87,7 @@
 |-------|-----------|
 | **Frontend** | Next.js 15, React 19, TypeScript |
 | **Styling** | Tailwind CSS 3, Radix UI Primitives, Lucide Icons |
+| **3D & Animation** | GSAP 3.12 (ScrollTrigger), Custom 3D Tilt, Parallax, Magnetic Effects |
 | **Backend** | Python 3.9+, FastAPI, Uvicorn |
 | **ML / NLP** | scikit-learn (TF-IDF, Label Encoding), spaCy (NER), Gymnasium (RL) |
 | **AI** | Google Gemini 2.0 Flash (generative AI for skill advice) |
@@ -89,43 +100,62 @@
 
 ```
 NextLeap/
-├── app/                          # Next.js App Router pages
-│   ├── page.tsx                  # Landing page
-│   ├── layout.tsx                # Root layout with Header & Footer
-│   ├── globals.css               # Global design system & animations
-│   ├── career-forecasting/       # Career forecasting feature page
+├── app/                              # Next.js App Router pages
+│   ├── page.tsx                      # Landing page (3D immersive experience)
+│   ├── layout.tsx                    # Root layout with Header & Footer
+│   ├── globals.css                   # Global design system, animations & 3D utilities
+│   ├── career-forecasting/           # Career forecasting feature page
 │   │   └── page.tsx
-│   ├── skill-gap/                # Skill gap analyzer feature page
+│   ├── skill-gap/                    # Skill gap analyzer feature page
 │   │   └── page.tsx
-│   ├── cultural-match/           # Cultural match feature page
+│   ├── cultural-match/               # Cultural match feature page
 │   │   └── page.tsx
-│   └── api/                      # Next.js API routes (proxy)
-├── components/                   # Reusable React components
-│   ├── Header.tsx                # Navigation header
-│   ├── Footer.tsx                # Footer component
-│   └── ui/                       # UI primitives (Button, Card, Badge, etc.)
-│       ├── ambient-particles.tsx  # Floating particle background
-│       ├── reveal.tsx            # Scroll-reveal animation wrapper
-│       └── ...                   # Radix UI-based components
-├── lib/                          # Utility modules
-│   ├── api.ts                    # API client functions
-│   ├── api-base.ts               # Base API URL configuration
-│   ├── career-model.ts           # Career recommendation API helpers
-│   ├── particles.ts              # Particle generation utilities
-│   └── utils.ts                  # General utilities
-├── hooks/                        # Custom React hooks
-│   └── use-toast.ts              # Toast notification hook
-├── main.py                       # FastAPI backend (all API endpoints)
-├── resume_parser.py              # Resume text extraction & skill analysis
-├── gemini_integration.py         # Google Gemini AI integration
-├── culturematch.py               # TF-IDF company culture matcher
-├── career_dataset.csv            # Career transition training data
-├── merged_data.csv               # Company culture dataset
-├── requirements.txt              # Python dependencies
-├── package.json                  # Node.js dependencies
-├── tailwind.config.ts            # Tailwind CSS configuration
-├── next.config.mjs               # Next.js configuration
-└── .env                          # Environment variables (not committed)
+│   └── api/                          # Next.js API routes (proxy to FastAPI)
+│       ├── ai-advice/
+│       ├── analyze-skills/
+│       ├── career-recommendations/
+│       ├── cultural-match/
+│       ├── fresher-recommendations/
+│       └── health/
+├── components/                       # Reusable React components
+│   ├── Header.tsx                    # Navigation header with glassmorphism
+│   ├── Footer.tsx                    # Footer component
+│   ├── theme-provider.tsx            # Dark/light theme provider
+│   ├── theme-toggle.tsx              # Theme toggle button
+│   └── ui/                           # UI primitives & interactive components
+│       ├── tilt-card.tsx             # 3D tilt card with cursor-responsive rotation
+│       ├── parallax-layer.tsx        # GSAP parallax scroll wrapper
+│       ├── scroll-section.tsx        # Scroll-triggered animation wrapper
+│       ├── magnetic.tsx              # Magnetic cursor attraction wrapper
+│       ├── floating-orbs.tsx         # Background depth orbs & scroll progress bar
+│       ├── ambient-particles.tsx     # Floating particle background
+│       ├── reveal.tsx                # IntersectionObserver-based reveal
+│       ├── button.tsx, card.tsx      # Radix UI-based primitives
+│       └── ...                       # 50+ additional UI components
+├── hooks/                            # Custom React hooks
+│   ├── useGsapScrollAnimations.ts   # GSAP scroll reveal, parallax & stagger hooks
+│   ├── useTiltEffect.ts             # Interactive 3D tilt & magnetic cursor hooks
+│   ├── use-toast.ts                  # Toast notification hook
+│   ├── use-mobile.tsx                # Mobile detection hook
+│   └── use-performance.ts           # Performance monitoring hook
+├── lib/                              # Utility modules
+│   ├── api.ts                        # API client functions
+│   ├── api-base.ts                   # Base API URL configuration
+│   ├── career-model.ts              # Career recommendation API helpers
+│   ├── particles.ts                  # Deterministic particle generation
+│   ├── performance-utils.ts         # Performance optimization utilities
+│   └── utils.ts                      # General utilities (cn, etc.)
+├── main.py                           # FastAPI backend (all API endpoints)
+├── resume_parser.py                  # Resume text extraction & skill analysis
+├── gemini_integration.py            # Google Gemini AI integration
+├── culturematch.py                   # TF-IDF company culture matcher
+├── career_dataset.csv                # Career transition training data
+├── merged_data.csv                   # Company culture dataset
+├── requirements.txt                  # Python dependencies
+├── package.json                      # Node.js dependencies
+├── tailwind.config.ts                # Tailwind CSS configuration
+├── next.config.mjs                   # Next.js configuration
+└── .env                              # Environment variables (not committed)
 ```
 
 ---
@@ -263,6 +293,16 @@ This project is deployment-ready for platforms like [Render](https://render.com/
 | **Build Command** | `npm install --legacy-peer-deps && npm run build` |
 | **Start Command** | `npm start` |
 | **Environment Variable** | Ensure API calls point to your deployed backend URL |
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
