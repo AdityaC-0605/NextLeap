@@ -3,8 +3,15 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Reveal } from "@/components/ui/reveal"
 import { AmbientParticles } from "@/components/ui/ambient-particles"
+import { TiltCard } from "@/components/ui/tilt-card"
+import { ParallaxLayer } from "@/components/ui/parallax-layer"
+import { Magnetic } from "@/components/ui/magnetic"
+import { FloatingOrbs, ScrollProgressIndicator } from "@/components/ui/floating-orbs"
+import {
+  useScrollReveal,
+  useStaggerReveal,
+} from "@/hooks/useGsapScrollAnimations"
 import {
   ArrowRight,
   Brain,
@@ -15,39 +22,79 @@ import {
   Upload,
   Zap,
   CheckCircle,
-  Linkedin,
-  Twitter,
-  Mail,
   Star,
   Sparkles,
-  ChevronRight,
   Play,
   Award,
   BarChart3,
   Lightbulb,
 } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { generateParticles } from "@/lib/particles"
+import { gsap } from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger)
+}
 
 const PARTICLES = generateParticles(15, 11, true)
 
 export default function LandingPage() {
-  const [isVisible] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
+  // GSAP scroll reveal refs
+  const heroTextRef = useScrollReveal<HTMLDivElement>({ type: "fade-up", duration: 1.2, distance: 80 })
+  const heroCardRef = useScrollReveal<HTMLDivElement>({ type: "flip-up", duration: 1.4, delay: 0.3, distance: 60 })
+  const featuresTitleRef = useScrollReveal<HTMLDivElement>({ type: "fade-up", duration: 1, distance: 50 })
+  const featuresGridRef = useStaggerReveal<HTMLDivElement>("[data-feature-card]", 0.1, 0.9, 60)
+  const howItWorksTitleRef = useScrollReveal<HTMLDivElement>({ type: "scale", duration: 1, distance: 40 })
+  const stepsGridRef = useStaggerReveal<HTMLDivElement>("[data-step-card]", 0.2, 1, 70)
+  const toolsTitleRef = useScrollReveal<HTMLDivElement>({ type: "fade-up", duration: 1 })
+  const toolsGridRef = useStaggerReveal<HTMLDivElement>("[data-tool-card]", 0.15, 0.9, 50)
+  const ctaRef = useScrollReveal<HTMLDivElement>({ type: "scale", duration: 1.2, distance: 40 })
+
+  // Progress line animation
+  const progressLineRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    // Mouse tracking for interactive effects
     const handleMouseMove = (e: globalThis.MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
-
     window.addEventListener("mousemove", handleMouseMove)
     return () => window.removeEventListener("mousemove", handleMouseMove)
   }, [])
 
+  // Animate the "How It Works" progress line on scroll
+  useEffect(() => {
+    const line = progressLineRef.current
+    if (!line) return
+
+    gsap.fromTo(
+      line,
+      { scaleX: 0, transformOrigin: "left center" },
+      {
+        scaleX: 1,
+        duration: 1.5,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: line,
+          start: "top 80%",
+          toggleActions: "play none none none",
+        },
+      }
+    )
+  }, [])
+
   return (
-    <div className="theme-surface min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-teal-800 relative overflow-hidden">
+    <div className="theme-surface min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-teal-800 relative overflow-hidden perspective-container">
+      {/* Scroll Progress Bar */}
+      <ScrollProgressIndicator />
+
+      {/* Floating depth orbs */}
+      <FloatingOrbs />
+
       {/* Premium Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Gradient Mesh */}
@@ -69,13 +116,12 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* Navigation moved to shared Header */}
-
-      {/* Hero Section - Premium Design */}
+      {/* ─── Hero Section ─── */}
       <section className="relative py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <Reveal className={`space-y-10 transition-all duration-1000 ${isVisible ? "animate-fade-in-scale" : "opacity-0"}`}>
+            {/* Hero Text */}
+            <div ref={heroTextRef} className="space-y-10">
               <div className="space-y-8">
                 <Badge className="bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-300 hover:from-teal-500/30 hover:to-cyan-500/30 transition-all duration-300 border border-teal-400/30 font-semibold px-4 py-2 text-sm shadow-sm animate-shimmer">
                   <Sparkles className="w-4 h-4 mr-2" />
@@ -96,26 +142,30 @@ export default function LandingPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/career-forecasting">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-slate-900 px-8 py-4 font-bold transition-all duration-300 shadow-premium hover:shadow-premium-lg focus-ring animate-button-press group"
-                  >
-                    Get Career Recommendations
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                  </Button>
-                </Link>
+                <Magnetic strength={0.15}>
+                  <Link href="/career-forecasting">
+                    <Button
+                      size="lg"
+                      className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-slate-900 px-8 py-4 font-bold transition-all duration-300 shadow-premium hover:shadow-premium-lg focus-ring group btn-3d"
+                    >
+                      Get Career Recommendations
+                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </Button>
+                  </Link>
+                </Magnetic>
 
-                <Link href="/skill-gap">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="glass-card-dark border-slate-400/30 hover:border-teal-400 hover:bg-teal-400/10 text-slate-300 hover:text-teal-400 px-8 py-4 font-semibold transition-all duration-300 focus-ring animate-button-press group"
-                  >
-                    <Upload className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                    Analyze Resume
-                  </Button>
-                </Link>
+                <Magnetic strength={0.15}>
+                  <Link href="/skill-gap">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="glass-card-dark border-slate-400/30 hover:border-teal-400 hover:bg-teal-400/10 text-slate-300 hover:text-teal-400 px-8 py-4 font-semibold transition-all duration-300 focus-ring group btn-3d"
+                    >
+                      <Upload className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                      Analyze Resume
+                    </Button>
+                  </Link>
+                </Magnetic>
               </div>
 
               <div className="flex items-center space-x-8 text-sm text-slate-400">
@@ -134,73 +184,83 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-            </Reveal>
+            </div>
 
-            {/* Premium Hero Card */}
-            <Reveal delayMs={140} className={`relative transition-all duration-1000 delay-300 ${isVisible ? "animate-fade-in-scale" : "opacity-0"}`}>
-              <div className="glass-card-dark rounded-3xl p-8 shadow-premium-lg hover:shadow-glow-teal transition-all duration-500 animate-float-soft border border-teal-400/20">
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-2xl flex items-center justify-center shadow-lg animate-glow-teal">
-                      <Target className="w-6 h-6 text-slate-900" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white text-lg">Perfect Match Found!</h3>
-                      <p className="text-slate-300 font-medium">Senior Product Manager at TechCorp</p>
-                    </div>
-                    <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-emerald-400/30 font-semibold">
-                      <Award className="w-3 h-3 mr-1" />
-                      Top 1%
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-300 font-medium">AI Match Score</span>
-                      <span className="font-bold text-emerald-400 text-xl">94%</span>
-                    </div>
-
-                    <div className="relative">
-                      <div className="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden">
-                        <div className="bg-gradient-to-r from-emerald-400 to-teal-400 h-3 rounded-full animate-progress-fill shadow-sm" />
+            {/* Premium Hero Card with 3D tilt */}
+            <div ref={heroCardRef}>
+              <TiltCard maxTilt={8} perspective={1200} scale={1.02}>
+                <div className="glass-card-dark rounded-3xl p-8 shadow-premium-lg hover:shadow-glow-teal transition-all duration-500 border border-teal-400/20 card-depth">
+                  <div className="space-y-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-2xl flex items-center justify-center shadow-lg animate-glow-teal icon-3d">
+                        <Target className="w-6 h-6 text-slate-900" />
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { text: "Remote", color: "blue" },
-                      { text: "$140k-180k", color: "emerald" },
-                      { text: "Growth Stage", color: "teal" },
-                      { text: "Equity", color: "amber" },
-                    ].map((badge, index) => (
-                      <Badge
-                        key={index}
-                        className="text-xs bg-slate-700/50 text-slate-300 border-slate-600/50 font-medium hover:bg-slate-600/50 transition-colors duration-200"
-                      >
-                        {badge.text}
+                      <div>
+                        <h3 className="font-bold text-white text-lg">Perfect Match Found!</h3>
+                        <p className="text-slate-300 font-medium">Senior Product Manager at TechCorp</p>
+                      </div>
+                      <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-emerald-400/30 font-semibold">
+                        <Award className="w-3 h-3 mr-1" />
+                        Top 1%
                       </Badge>
-                    ))}
-                  </div>
+                    </div>
 
-                  <Link href="/skill-gap">
-                    <Button className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-slate-900 font-bold transition-all duration-200 animate-button-press">
-                      <Play className="w-4 h-4 mr-2" />
-                      View Full Analysis
-                    </Button>
-                  </Link>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-300 font-medium">AI Match Score</span>
+                        <span className="font-bold text-emerald-400 text-xl">94%</span>
+                      </div>
+
+                      <div className="relative">
+                        <div className="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden">
+                          <div className="bg-gradient-to-r from-emerald-400 to-teal-400 h-3 rounded-full animate-progress-fill shadow-sm" />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { text: "Remote", color: "blue" },
+                        { text: "$140k-180k", color: "emerald" },
+                        { text: "Growth Stage", color: "teal" },
+                        { text: "Equity", color: "amber" },
+                      ].map((badge, index) => (
+                        <Badge
+                          key={index}
+                          className="text-xs bg-slate-700/50 text-slate-300 border-slate-600/50 font-medium hover:bg-slate-600/50 transition-colors duration-200"
+                        >
+                          {badge.text}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <Link href="/skill-gap">
+                      <Button className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-slate-900 font-bold transition-all duration-200">
+                        <Play className="w-4 h-4 mr-2" />
+                        View Full Analysis
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            </Reveal>
+              </TiltCard>
+            </div>
           </div>
         </div>
+
+        {/* Decorative parallax layers */}
+        <ParallaxLayer speed={-0.15} className="absolute top-20 right-10 pointer-events-none opacity-30">
+          <div className="w-32 h-32 rounded-full bg-gradient-to-br from-teal-400/30 to-transparent blur-2xl" />
+        </ParallaxLayer>
+        <ParallaxLayer speed={0.1} className="absolute bottom-10 left-10 pointer-events-none opacity-20">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-400/30 to-transparent blur-xl" />
+        </ParallaxLayer>
       </section>
 
-      {/* Premium Features Section */}
-      <section id="features" className="py-20 bg-gradient-to-b from-slate-800/50 to-slate-900/50">
+      {/* ─── Features Section ─── */}
+      <section id="features" className="py-20 bg-gradient-to-b from-slate-800/50 to-slate-900/50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="text-center space-y-6 mb-16 animate-fade-in-scale">
+          <div ref={featuresTitleRef} className="text-center space-y-6 mb-16">
             <Badge className="bg-gradient-to-r from-teal-500/20 to-cyan-500/20 text-teal-300 border-teal-400/30 font-semibold px-4 py-2">
               <BarChart3 className="w-4 h-4 mr-2" />
               Intelligent Platform
@@ -212,9 +272,9 @@ export default function LandingPage() {
               Powered by advanced AI, machine learning, and natural language processing to deliver unprecedented career
               insights and recommendations.
             </p>
-          </Reveal>
+          </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div ref={featuresGridRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 icon: TrendingUp,
@@ -222,8 +282,6 @@ export default function LandingPage() {
                 desc: "Advanced machine learning algorithms analyze global market trends, salary data, and career trajectories to predict your optimal next moves.",
                 iconColor: "text-teal-400",
                 iconBg: "from-teal-500/80 to-cyan-500/80",
-                glowColor: "shadow-teal-500/20",
-                delay: "0s",
               },
               {
                 icon: Target,
@@ -231,8 +289,6 @@ export default function LandingPage() {
                 desc: "Sophisticated matching algorithms evaluate 200+ factors including skills, experience, preferences, and market demand for perfect role alignment.",
                 iconColor: "text-emerald-400",
                 iconBg: "from-emerald-500/80 to-green-500/80",
-                glowColor: "shadow-emerald-500/20",
-                delay: "0.1s",
               },
               {
                 icon: Zap,
@@ -240,8 +296,6 @@ export default function LandingPage() {
                 desc: "Deep learning models identify skill gaps, predict future skill demands, and create personalized learning roadmaps for career acceleration.",
                 iconColor: "text-cyan-400",
                 iconBg: "from-cyan-500/80 to-blue-500/80",
-                glowColor: "shadow-cyan-500/20",
-                delay: "0.2s",
               },
               {
                 icon: Users,
@@ -249,8 +303,6 @@ export default function LandingPage() {
                 desc: "Natural language processing analyzes company cultures, values, and work environments to find your perfect cultural fit.",
                 iconColor: "text-amber-400",
                 iconBg: "from-amber-500/80 to-orange-500/80",
-                glowColor: "shadow-amber-500/20",
-                delay: "0.3s",
               },
               {
                 icon: FileText,
@@ -258,8 +310,6 @@ export default function LandingPage() {
                 desc: "Advanced document parsing and semantic analysis extract deep insights from your resume to unlock hidden career opportunities.",
                 iconColor: "text-rose-400",
                 iconBg: "from-rose-500/80 to-pink-500/80",
-                glowColor: "shadow-rose-500/20",
-                delay: "0.4s",
               },
               {
                 icon: Brain,
@@ -267,38 +317,43 @@ export default function LandingPage() {
                 desc: "Proprietary algorithms predict salary growth, promotion timelines, and career satisfaction based on millions of data points.",
                 iconColor: "text-indigo-400",
                 iconBg: "from-indigo-500/80 to-purple-500/80",
-                glowColor: "shadow-indigo-500/20",
-                delay: "0.5s",
               },
             ].map((feature, index) => (
-              <Card
-                key={index}
-                className={`bg-slate-800/90 border-slate-600/50 shadow-premium hover:shadow-premium-lg hover:${feature.glowColor} transition-all duration-500 hover:-translate-y-2 animate-card-hover group cursor-pointer animate-fade-in-scale backdrop-blur-sm`}
-                style={{ animationDelay: feature.delay }}
-              >
-                <CardHeader className="pb-6">
-                  <div
-                    className={`w-14 h-14 bg-gradient-to-r ${feature.iconBg} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg border border-slate-500/30`}
-                  >
-                    <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-slate-100 group-hover:text-teal-300 transition-colors duration-300">
-                    {feature.title}
-                  </CardTitle>
-                  <CardDescription className="text-slate-200 leading-relaxed font-medium">
-                    {feature.desc}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+              <TiltCard key={index} maxTilt={6} perspective={800} scale={1.01}>
+                <Card
+                  data-feature-card
+                  className="bg-slate-800/90 border-slate-600/50 shadow-premium hover:shadow-premium-lg transition-all duration-500 hover:-translate-y-2 group cursor-pointer backdrop-blur-sm card-depth h-full"
+                >
+                  <CardHeader className="pb-6">
+                    <div
+                      className={`w-14 h-14 bg-gradient-to-r ${feature.iconBg} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg border border-slate-500/30 icon-3d`}
+                    >
+                      <feature.icon className={`w-7 h-7 ${feature.iconColor}`} />
+                    </div>
+                    <CardTitle className="text-xl font-bold text-slate-100 group-hover:text-teal-300 transition-colors duration-300">
+                      {feature.title}
+                    </CardTitle>
+                    <CardDescription className="text-slate-200 leading-relaxed font-medium">
+                      {feature.desc}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </TiltCard>
             ))}
           </div>
         </div>
+
+        {/* Depth-layer decorative element */}
+        <ParallaxLayer speed={-0.1} className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-gradient-to-br from-teal-500/5 to-transparent blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-gradient-to-br from-cyan-500/5 to-transparent blur-3xl" />
+        </ParallaxLayer>
       </section>
 
-      {/* Premium How It Works */}
-      <section id="how-it-works" className="py-20 bg-gradient-to-br from-slate-900/50 to-blue-900/50">
+      {/* ─── How It Works ─── */}
+      <section id="how-it-works" className="py-20 bg-gradient-to-br from-slate-900/50 to-blue-900/50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-6 mb-16 animate-fade-in-scale">
+          <div ref={howItWorksTitleRef} className="text-center space-y-6 mb-16">
             <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-300 border-emerald-400/30 font-semibold px-4 py-2">
               <Lightbulb className="w-4 h-4 mr-2" />
               How It Works
@@ -312,45 +367,47 @@ export default function LandingPage() {
           </div>
 
           <div className="relative">
-            {/* Premium Progress Line */}
-            <div className="hidden md:block absolute top-12 left-1/2 transform -translate-x-1/2 w-2/3 h-1 bg-gradient-to-r from-teal-400/30 via-cyan-400/30 to-emerald-400/30 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-teal-400 via-cyan-400 to-emerald-400 rounded-full animate-shimmer" />
+            {/* Animated Progress Line */}
+            <div className="hidden md:block absolute top-12 left-1/2 transform -translate-x-1/2 w-2/3 h-1 bg-slate-700/30 rounded-full overflow-hidden">
+              <div
+                ref={progressLineRef}
+                className="h-full bg-gradient-to-r from-teal-400 via-cyan-400 to-emerald-400 rounded-full shadow-[0_0_15px_rgba(20,184,166,0.5)]"
+              />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-12 relative">
+            <div ref={stepsGridRef} className="grid md:grid-cols-3 gap-12 relative">
               {[
                 {
                   icon: Upload,
                   title: "Upload & Analyze",
                   desc: "Upload your resume or create a detailed profile. Our advanced AI instantly analyzes your experience, skills, education, and career preferences using state-of-the-art NLP.",
                   iconBg: "from-teal-500 to-cyan-500",
-                  delay: "0s",
                 },
                 {
                   icon: Brain,
                   title: "AI Processing",
                   desc: "Our machine learning algorithms process your data against millions of career paths, real-time market trends, and industry insights to generate hyper-personalized recommendations.",
                   iconBg: "from-cyan-500 to-blue-500",
-                  delay: "0.3s",
                 },
                 {
                   icon: Target,
                   title: "Smart Recommendations",
                   desc: "Receive data-driven career transitions, strategic skill development paths, perfect company culture matches, and actionable insights to accelerate your growth.",
                   iconBg: "from-emerald-500 to-teal-500",
-                  delay: "0.6s",
                 },
               ].map((step, index) => (
                 <div
                   key={index}
-                  className="text-center space-y-6 animate-fade-in-scale"
-                  style={{ animationDelay: step.delay }}
+                  data-step-card
+                  className="text-center space-y-6"
                 >
-                  <div
-                    className={`w-20 h-20 bg-gradient-to-r ${step.iconBg} rounded-3xl flex items-center justify-center mx-auto hover:scale-110 transition-transform duration-300 shadow-premium-lg animate-glow-teal`}
-                  >
-                    <step.icon className="w-10 h-10 text-slate-900" />
-                  </div>
+                  <Magnetic strength={0.2}>
+                    <div
+                      className={`w-20 h-20 bg-gradient-to-r ${step.iconBg} rounded-3xl flex items-center justify-center mx-auto hover:scale-110 transition-transform duration-300 shadow-premium-lg animate-glow-teal icon-3d`}
+                    >
+                      <step.icon className="w-10 h-10 text-slate-900" />
+                    </div>
+                  </Magnetic>
                   <div className="space-y-4">
                     <h3 className="text-2xl font-bold text-white">
                       {index + 1}. {step.title}
@@ -362,12 +419,17 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+
+        {/* Parallax depth layers */}
+        <ParallaxLayer speed={0.08} className="absolute top-10 right-0 pointer-events-none">
+          <div className="w-40 h-40 rounded-full bg-gradient-to-br from-emerald-500/8 to-transparent blur-3xl" />
+        </ParallaxLayer>
       </section>
 
-      {/* Premium Tools Showcase */}
-      <section className="py-20 bg-gradient-to-b from-slate-800/50 to-slate-900/50">
+      {/* ─── Tools Showcase ─── */}
+      <section className="py-20 bg-gradient-to-b from-slate-800/50 to-slate-900/50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-6 mb-16 animate-fade-in-scale">
+          <div ref={toolsTitleRef} className="text-center space-y-6 mb-16">
             <Badge className="bg-gradient-to-r from-cyan-500/20 to-teal-500/20 text-cyan-300 border-cyan-400/30 font-semibold px-4 py-2">
               <Zap className="w-4 h-4 mr-2" />
               AI-Powered Tools
@@ -380,7 +442,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div ref={toolsGridRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
                 title: "Career Forecasting",
@@ -390,7 +452,6 @@ export default function LandingPage() {
                 iconColor: "text-teal-400",
                 iconBg: "from-teal-500/80 to-cyan-500/80",
                 buttonColor: "from-teal-500 to-cyan-500",
-                glowColor: "shadow-teal-500/20",
                 features: ["Smart Role Matching", "Salary Intelligence", "Career Path Optimization"],
               },
               {
@@ -401,7 +462,6 @@ export default function LandingPage() {
                 iconColor: "text-cyan-400",
                 iconBg: "from-cyan-500/80 to-blue-500/80",
                 buttonColor: "from-cyan-500 to-blue-500",
-                glowColor: "shadow-cyan-500/20",
                 features: ["Deep Skills Assessment", "Personalized Learning Paths", "Market Demand Analysis"],
               },
               {
@@ -412,51 +472,57 @@ export default function LandingPage() {
                 iconColor: "text-emerald-400",
                 iconBg: "from-emerald-500/80 to-green-500/80",
                 buttonColor: "from-emerald-500 to-green-500",
-                glowColor: "shadow-emerald-500/20",
                 features: ["Culture DNA Matching", "Values Alignment", "Work Environment Analysis"],
               },
             ].map((tool, index) => (
-              <Card
-                key={index}
-                className={`bg-slate-800/90 border-slate-600/50 shadow-premium hover:shadow-premium-lg hover:${tool.glowColor} transition-all duration-500 hover:-translate-y-2 animate-card-hover group cursor-pointer animate-fade-in-scale backdrop-blur-sm`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CardHeader className="pb-4">
-                  <div
-                    className={`w-14 h-14 bg-gradient-to-r ${tool.iconBg} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg border border-slate-600/30`}
-                  >
-                    <tool.icon className={`w-7 h-7 ${tool.iconColor}`} />
-                  </div>
-                  <CardTitle className="text-xl font-bold text-slate-100 group-hover:text-teal-300 transition-colors duration-300">
-                    {tool.title}
-                  </CardTitle>
-                  <CardDescription className="text-slate-200 leading-relaxed font-medium">{tool.desc}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <ul className="space-y-3">
-                    {tool.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center text-sm text-slate-200 font-medium">
-                        <CheckCircle className="w-4 h-4 text-emerald-400 mr-3 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href={tool.link}>
-                    <Button
-                      className={`w-full bg-gradient-to-r ${tool.buttonColor} hover:opacity-90 text-slate-900 group-hover:scale-105 transition-all duration-300 shadow-lg font-bold animate-button-press`}
+              <TiltCard key={index} maxTilt={7} perspective={900} scale={1.02}>
+                <Card
+                  data-tool-card
+                  className="bg-slate-800/90 border-slate-600/50 shadow-premium hover:shadow-premium-lg transition-all duration-500 hover:-translate-y-2 group cursor-pointer backdrop-blur-sm card-depth h-full"
+                >
+                  <CardHeader className="pb-4">
+                    <div
+                      className={`w-14 h-14 bg-gradient-to-r ${tool.iconBg} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg border border-slate-600/30 icon-3d`}
                     >
-                      Launch {tool.title}
-                      <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                      <tool.icon className={`w-7 h-7 ${tool.iconColor}`} />
+                    </div>
+                    <CardTitle className="text-xl font-bold text-slate-100 group-hover:text-teal-300 transition-colors duration-300">
+                      {tool.title}
+                    </CardTitle>
+                    <CardDescription className="text-slate-200 leading-relaxed font-medium">{tool.desc}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <ul className="space-y-3">
+                      {tool.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-center text-sm text-slate-200 font-medium">
+                          <CheckCircle className="w-4 h-4 text-emerald-400 mr-3 flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href={tool.link}>
+                      <Magnetic strength={0.1}>
+                        <Button
+                          className={`w-full bg-gradient-to-r ${tool.buttonColor} hover:opacity-90 text-slate-900 group-hover:scale-105 transition-all duration-300 shadow-lg font-bold btn-3d`}
+                        >
+                          Launch {tool.title}
+                          <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                        </Button>
+                      </Magnetic>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </TiltCard>
             ))}
           </div>
         </div>
+
+        <ParallaxLayer speed={-0.12} className="absolute bottom-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+          <div className="absolute -bottom-32 left-1/3 w-96 h-96 rounded-full bg-gradient-to-br from-cyan-500/5 to-transparent blur-3xl" />
+        </ParallaxLayer>
       </section>
 
-      {/* Premium CTA Section */}
+      {/* ─── CTA Section ─── */}
       <section className="py-20 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-orange-600/20 to-yellow-600/20" />
         <div
@@ -466,9 +532,8 @@ export default function LandingPage() {
           }}
         />
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <Reveal className="space-y-8 animate-fade-in-scale">
-
+        <div ref={ctaRef} className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <div className="space-y-8">
             <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight">
               Ready to Transform Your Career?
             </h2>
@@ -479,26 +544,30 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/career-forecasting">
-                <Button
-                  size="lg"
-                  className="bg-slate-900 text-white hover:bg-slate-800 px-10 py-4 text-lg font-bold shadow-premium-lg hover:shadow-glow transition-all duration-300 animate-button-press group"
-                >
-                  Get Career Recommendations
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                </Button>
-              </Link>
+              <Magnetic strength={0.12}>
+                <Link href="/career-forecasting">
+                  <Button
+                    size="lg"
+                    className="bg-slate-900 text-white hover:bg-slate-800 px-10 py-4 text-lg font-bold shadow-premium-lg hover:shadow-glow transition-all duration-300 group btn-3d"
+                  >
+                    Get Career Recommendations
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  </Button>
+                </Link>
+              </Magnetic>
 
-              <Link href="#features">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-slate-800/30 text-slate-900 hover:bg-slate-900/10 px-10 py-4 text-lg font-bold backdrop-blur-sm transition-all duration-300 animate-button-press"
-                >
-                  <Play className="w-5 h-5 mr-2" />
-                  Explore Features
-                </Button>
-              </Link>
+              <Magnetic strength={0.12}>
+                <Link href="#features">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-slate-800/30 text-slate-900 hover:bg-slate-900/10 px-10 py-4 text-lg font-bold backdrop-blur-sm transition-all duration-300 btn-3d"
+                  >
+                    <Play className="w-5 h-5 mr-2" />
+                    Explore Features
+                  </Button>
+                </Link>
+              </Magnetic>
             </div>
 
             <div className="flex items-center justify-center space-x-8 text-slate-800 text-sm font-medium">
@@ -515,8 +584,13 @@ export default function LandingPage() {
                 <span>No credit card required</span>
               </div>
             </div>
-          </Reveal>
+          </div>
         </div>
+
+        {/* Parallax wave accent */}
+        <ParallaxLayer speed={0.05} className="absolute -bottom-4 left-0 right-0 pointer-events-none">
+          <div className="h-16 bg-gradient-to-t from-slate-900/20 to-transparent" />
+        </ParallaxLayer>
       </section>
 
       {/* Footer is shared in layout */}
