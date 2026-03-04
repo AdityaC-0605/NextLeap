@@ -21,7 +21,7 @@ class GeminiSkillsAdvisor:
         genai.configure(api_key=api_key)
         
         # Try available models in preference order
-        model_name = 'gemini-2.0-flash'
+        model_name = 'gemini-2.5-flash'
         try:
             self.model = genai.GenerativeModel(model_name)
         except Exception:
