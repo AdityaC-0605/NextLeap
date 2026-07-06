@@ -23,9 +23,9 @@ export type ScrollRevealOptions = {
 
 export function useScrollReveal<T extends HTMLElement>(options: ScrollRevealOptions = {}) {
     const ref = useRef<T>(null)
-    // Store options in a ref to avoid re-running the effect
+    // Capture the options once; the effect below runs a single time on mount,
+    // so only the initial value is ever read.
     const optsRef = useRef(options)
-    optsRef.current = options
 
     useEffect(() => {
         const el = ref.current

@@ -77,7 +77,9 @@ export default function CulturalMatch() {
       const current = prev.trim()
       const tagLower = tag.toLowerCase()
       if (current.toLowerCase().includes(tagLower)) {
-        return current.replace(new RegExp(tag, 'gi'), '').replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '').trim()
+        // Escape regex special chars so tags like "C++" don't form an invalid pattern
+        const escapedTag = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        return current.replace(new RegExp(escapedTag, 'gi'), '').replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '').trim()
       }
       return current ? `${current}, ${tag}` : tag
     })
