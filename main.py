@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 load_dotenv()
+import os
 from fastapi import FastAPI, HTTPException, Request
 import pandas as pd
 import numpy as np
@@ -20,9 +21,18 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Restrict CORS to known origins. Set CORS_ALLOW_ORIGINS (comma-separated) in
+# production; defaults to the local Next.js dev server. A wildcard "*" cannot be
+# combined with credentials, so origins are explicit.
+_allowed_origins = [
+    o.strip()
+    for o in os.environ.get("CORS_ALLOW_ORIGINS", "http://localhost:3000").split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -251,12 +261,13 @@ async def cultural_match(request: Request):
 
         recommendations = cultural_matcher.get_company_recommendations(preferences, top_n)
         return {"recommendations": recommendations}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Cultural matching failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Cultural matching failed")
 
 from fastapi import UploadFile, File, Form
-import shutil
 
 @app.post("/api/analyze-skills")
 async def analyze_skills(
@@ -268,16 +279,24 @@ async def analyze_skills(
     Analyze uploaded resume and return categorized skills (and skill match if target_role provided).
     If gemini_advice is true and there are missing skills, return Gemini-powered advice for missing skills.
     """
-    import os
     import tempfile
+    ALLOWED_EXTENSIONS = {".pdf", ".docx"}
+    MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
+    tmp_path = None
     try:
-        suffix = os.path.splitext(resume.filename)[1]
+        suffix = os.path.splitext(resume.filename or "")[1].lower()
+        if suffix not in ALLOWED_EXTENSIONS:
+            raise HTTPException(status_code=400, detail="Only PDF and DOCX files are supported")
+
+        contents = await resume.read()
+        if len(contents) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="File too large (max 5 MB)")
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            shutil.copyfileobj(resume.file, tmp)
+            tmp.write(contents)
             tmp_path = tmp.name
         # Parse resume
         result = resume_parser.parse_resume(tmp_path, target_role)
-        os.remove(tmp_path)
         if not result:
             raise HTTPException(status_code=500, detail="Failed to extract skills")
 
@@ -293,8 +312,14 @@ async def analyze_skills(
                 # If Gemini isn't configured, continue without blocking the request
                 result["gemini_advice_error"] = f"Gemini not configured: {str(e)}"
         return result
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        logger.error(f"analyze-skills failed: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 # New: AI advice endpoint that calls Gemini directly with provided missing skills
 from pydantic import BaseModel
@@ -326,7 +351,8 @@ async def ai_advice(req: AdviceRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gemini advice failed: {str(e)}")
+        logger.error(f"ai-advice failed: {e}")
+        raise HTTPException(status_code=500, detail="Gemini advice failed")
 
 if __name__ == "__main__":
     import uvicorn
