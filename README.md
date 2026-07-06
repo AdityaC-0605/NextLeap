@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Gemini_AI-2.0_Flash-4285F4?style=for-the-badge&logo=google" alt="Gemini AI" />
+  <img src="https://img.shields.io/badge/Gemini_AI-2.5_Flash-4285F4?style=for-the-badge&logo=google" alt="Gemini AI" />
   <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/GSAP-3.12-88CE02?style=for-the-badge&logo=greensock&logoColor=white" alt="GSAP" />
@@ -25,7 +25,7 @@
 ### 🔍 Skill Gap Analysis
 - **Resume Upload:** Upload your resume (PDF or DOCX) for automated skill extraction and categorization using spaCy NLP.
 - **Role Matching:** Select a target role from 60+ options and get a detailed match analysis — matched skills, missing skills, and match percentage.
-- **AI Learning Recommendations:** Google Gemini 2.0 Flash generates personalized learning paths for each missing skill, including resources and estimated learning timelines.
+- **AI Learning Recommendations:** Google Gemini 2.5 Flash generates personalized learning paths for each missing skill, including resources and estimated learning timelines.
 - Smart word-boundary-aware skill matching to prevent false positives.
 
 ### 🏢 Company Cultural Match
@@ -90,7 +90,7 @@
 | **3D & Animation** | GSAP 3.12 (ScrollTrigger), Custom 3D Tilt, Parallax, Magnetic Effects |
 | **Backend** | Python 3.9+, FastAPI, Uvicorn |
 | **ML / NLP** | scikit-learn (TF-IDF, Label Encoding), spaCy (NER), Gymnasium (RL) |
-| **AI** | Google Gemini 2.0 Flash (generative AI for skill advice) |
+| **AI** | Google Gemini 2.5 Flash (generative AI for skill advice) |
 | **Resume Parsing** | PyPDF2, docx2txt, spaCy |
 | **Data** | Pandas, NumPy, CSV datasets |
 
@@ -184,6 +184,15 @@ Create a `.env` file in the project root:
 GEMINI_API_KEY=your_google_gemini_api_key_here
 ```
 
+| Variable | Used by | Required | Default | Purpose |
+|----------|---------|----------|---------|---------|
+| `GEMINI_API_KEY` | Python backend | Yes (for AI advice) | — | Google Gemini API key for skill-learning advice |
+| `CORS_ALLOW_ORIGINS` | Python backend | No (set in prod) | `http://localhost:3000` | Comma-separated list of browser origins allowed to call the API |
+| `PYTHON_FASTAPI_URL` | Next.js API routes | No (prod) | `http://localhost:8000` | URL of the deployed FastAPI backend the Next.js routes proxy to |
+| `NEXT_PUBLIC_API_BASE` | Next.js client | No | `""` (same origin) | Base URL the browser uses for direct API calls (e.g. cultural-match, analyze-skills) |
+
+> ⚠️ **Security:** `.env` must never be committed. If a key has ever been committed (check `git log`), rotate it immediately — removing it in a later commit does **not** remove it from history.
+
 ### 3. Start the Python Backend
 
 ```bash
@@ -221,7 +230,7 @@ The frontend will be available at **`http://localhost:3000`**.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/health` | Health check — returns `{ "status": "ok" }` |
+| `GET` | `/health` | Health check — returns `{ "status": "running" }` |
 | `POST` | `/api/career-recommendations` | Get career transition recommendations for experienced professionals |
 | `POST` | `/api/fresher-recommendations` | Get career path suggestions for fresh graduates based on skills |
 | `POST` | `/api/cultural-match` | Find companies matching cultural preferences (TF-IDF similarity) |
@@ -265,12 +274,35 @@ The career recommendation system uses a **Reinforcement Learning agent** trained
 1. **Resume Parsing:** Extracts text from PDF/DOCX using PyPDF2 and docx2txt.
 2. **Skill Extraction:** Uses spaCy NLP with a curated dictionary of 400+ technical skills across 15 categories.
 3. **Role Matching:** Word-boundary-aware matching compares extracted skills against role-specific requirements.
-4. **AI Advice:** Google Gemini 2.0 Flash generates personalized learning paths with resources and timelines for each missing skill.
+4. **AI Advice:** Google Gemini 2.5 Flash generates personalized learning paths with resources and timelines for each missing skill.
 
 ### Cultural Match Engine
 1. Company culture descriptions are vectorized using **TF-IDF** with custom stop word filtering.
 2. User preferences are transformed and compared using **cosine similarity**.
 3. Top-N most similar companies are returned with normalized match scores.
+
+---
+
+## 🧪 Testing
+
+**Backend (pytest)** — covers the bug-prone logic: resume skill-matching, the
+TF-IDF cultural matcher, and the career-domain mapping.
+
+```bash
+pip install -r requirements-dev.txt   # after requirements.txt
+pytest
+```
+
+**Frontend (Vitest)** — covers the Next.js API-proxy routes (mocked `fetch`:
+success passthrough, error/status propagation, backend-unreachable) and the
+pure `lib/` utilities.
+
+```bash
+npm run test:web
+```
+
+> Coverage is a starting point, not exhaustive. React component/page tests
+> (Vitest + React Testing Library with a jsdom environment) are a good next step.
 
 ---
 
