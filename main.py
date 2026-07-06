@@ -95,7 +95,21 @@ domain_mapping = {
     "Computer Vision Researcher": "AI Research & Emerging Tech",
     "Technical Program Manager (TPM)": "Technical Management & Consulting",
     "Engineering Manager": "Technical Management & Consulting",
-    "Product Manager (Technical)": "Technical Management & Consulting"
+    "Product Manager (Technical)": "Technical Management & Consulting",
+    # Aliases for roles that appear as current_role without the parenthetical
+    # qualifier used in next_role (and a few roles only seen as current roles).
+    # Without these, domain_mapping.get(current_role) returns None and the user
+    # receives "No suitable career transitions found."
+    "Back-End Developer": "Software Development",
+    "Front-End Developer": "Software Development",
+    "Mobile App Developer": "Software Development",
+    "Cloud Developer": "Software Development",
+    "SDET (Software Development Engineer in Test)": "Testing & Quality Assurance",
+    "Web Developer": "UI/UX and Web Technology",
+    "Frontend Engineer": "UI/UX and Web Technology",
+    "Interaction Designer": "UI/UX and Web Technology",
+    "IT Consultant": "Technical Management & Consulting",
+    "Solutions Architect": "Cloud & Infrastructure"
 }
 
 career_df['domain'] = career_df['next_role'].map(domain_mapping)
